@@ -1,0 +1,9 @@
+# IDEs
+.idea
+
+# Rust
+target
+Cargo.lock
+
+# Godot
+.godot
