@@ -27,17 +27,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Clone Godot"
-        run: git clone https://github.com/godotengine/godot.git --depth 1 --branch master
-
-      - name: "Add $SHORT_SHA"
         run: |
+          git clone https://github.com/godotengine/godot.git --depth 1 --branch master
           cd godot
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
           cd
 
-      - name: "Check $SHORT_SHA"
+      - name: "Check ${{ env.SHORT_SHA }}"
         run: |
           echo "Short SHA is: $SHORT_SHA"
+
+      - name: "Curdir"
+        run: |
+          pwd
+
+      - name: "Scons"
+        run: |
+          pip install scons==3.1.2
+          scons --version
 
 #      - name: "Check cache for installed Godot version"
 #        id: "cache-godot"
