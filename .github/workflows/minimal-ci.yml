@@ -26,25 +26,41 @@ jobs:
   clone-godot:
     runs-on: ubuntu-latest
     steps:
-      - name: "Clone Godot"
-        run: |
-          git clone https://github.com/godotengine/godot.git --depth 1 --branch master
-          cd godot
-          echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-          cd
+#      - name: "Download artifact"
+      #        run: |
+      #          wget https://api.github.com/repos/godotengine/godot/actions/artifacts/252980785/zip
 
-      - name: "Check ${{ env.SHORT_SHA }}"
-        run: |
-          echo "Short SHA is: $SHORT_SHA"
+      - name: "Download artifact"
+        # https://github.com/dawidd6/action-download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          # Downloads and unzips the artifact with {name} of the latest run of specified {workflow}
+          github_token: ${{ secrets.ARTIFACT_DOWNLOADER_PAT }}
+          repo: godotengine/godot
+          branch: master
+          workflow: linux_builds.yml
+          workflow_conclusion: success
+          name: linux-editor-mono
 
-      - name: "Curdir"
-        run: |
-          pwd
-
-      - name: "Scons"
-        run: |
-          pip install scons==3.1.2
-          scons --version
+#      - name: "Clone Godot"
+#        run: |
+#          git clone https://github.com/godotengine/godot.git --depth 1 --branch master
+#          cd godot
+#          echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+#          cd
+#
+#      - name: "Check ${{ env.SHORT_SHA }}"
+#        run: |
+#          echo "Short SHA is: $SHORT_SHA"
+#
+#      - name: "Curdir"
+#        run: |
+#          pwd
+#
+#      - name: "Scons"
+#        run: |
+#          pip install scons==3.1.2
+#          scons --version
 
 #      - name: "Check cache for installed Godot version"
 #        id: "cache-godot"
