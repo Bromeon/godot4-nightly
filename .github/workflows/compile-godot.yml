@@ -1,6 +1,5 @@
-# Minimal CI workflow
-# Run when someone opens a PR and adds commits to the PR (this is recognized as a push to master)
-# Includes basic checks and unit/integration checks on Linux only
+# Compile Godot 4
+# See also: https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html
 
 name: Godot build pipeline
 
@@ -37,7 +36,7 @@ jobs:
         id: cache-godot
         uses: actions/cache@v2
         with:
-          path: ${{ runner.temp }}/godot_bin
+          path: . #${{ runner.temp }}/godot_bin
           key: godot-${{ runner.os }}-${{ env.SHA }}
 
       - name: "Linux dependencies"
@@ -65,8 +64,8 @@ jobs:
           scons -j$(nproc) platform=linuxbsd tools=no target=release_debug bits=64
           #mv bin ${{ runner.temp }}/godot_bin
 
+      # Upload artifact also when cached (so last successful workflow always has artifact)
       - name: "Upload artifact"
-        if: steps.cache-godot.outputs.cache-hit != 'true'
         uses: actions/upload-artifact@v3
         with:
           name: godot-linux
