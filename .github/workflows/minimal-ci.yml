@@ -82,5 +82,11 @@ jobs:
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
           scons -j$(nproc) platform=linuxbsd tools=no target=release_debug bits=64
-          mv bin ${{ runner.temp }}/godot_bin
+          #mv bin ${{ runner.temp }}/godot_bin
 
+      - name: "Upload artifact"
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: godot-linux
+          path: bin
