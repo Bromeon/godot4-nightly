@@ -39,7 +39,8 @@ jobs:
           workflow_conclusion: success
           name: godot-linux
 
+      # '|| true' because --version returns exit code 255, which fails the workflow
       - name: "Check Godot version"
         run: |
           chmod +x godot.linuxbsd.opt.debug.64
-          ./godot.linuxbsd.opt.debug.64 --version
+          ./godot.linuxbsd.opt.debug.64 --version || true
