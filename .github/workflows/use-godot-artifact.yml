@@ -1,0 +1,44 @@
+# Minimal CI workflow
+# Run when someone opens a PR and adds commits to the PR (this is recognized as a push to master)
+# Includes basic checks and unit/integration checks on Linux only
+
+name: Godot artifact consumer
+
+#env:
+
+
+on:
+  push:
+#  pull_request:
+#    branches:
+#      - master
+
+defaults:
+  run:
+    shell: bash
+
+# If a new commit is pushed before the old one's CI has completed (on the same branch), abort previous run
+#concurrency:
+#  group: ${{ github.head_ref }}
+#  cancel-in-progress: true
+
+jobs:
+  compile-godot:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: "Download artifact"
+        # https://github.com/dawidd6/action-download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          # Downloads and unzips the artifact with {name} of the latest run of specified {workflow}
+          github_token: ${{ secrets.ARTIFACT_DOWNLOADER_PAT }}
+          repo: Bromeon/godot-nightly
+          branch: master
+          workflow: minimal-ci.yml # rename: compile-godot.yml
+          workflow_conclusion: success
+          name: linux-editor-mono
+
+      - name: "Check Godot version"
+        run: |
+          ./godot.linuxbsd.opt.tools.64.mono --version
