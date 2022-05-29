@@ -35,7 +35,7 @@ jobs:
         id: cache-godot
         uses: actions/cache@v2
         with:
-          path: . #${{ runner.temp }}/godot_bin
+          path: bin #${{ runner.temp }}/godot_bin
           key: godot-${{ runner.os }}-${{ env.SHA }}
 
       - name: "Linux dependencies"
