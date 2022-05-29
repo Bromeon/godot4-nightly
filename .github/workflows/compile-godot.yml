@@ -7,10 +7,9 @@ name: Godot build pipeline
 
 
 on:
-  push:
-#  pull_request:
-#    branches:
-#      - master
+  schedule:
+    # Run at 02:47 UTC each morning
+    - cron: "47 2 * * *"
 
 defaults:
   run:
