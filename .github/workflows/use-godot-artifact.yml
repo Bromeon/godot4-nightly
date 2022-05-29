@@ -35,7 +35,7 @@ jobs:
           github_token: ${{ secrets.ARTIFACT_DOWNLOADER_PAT }}
           repo: Bromeon/godot-nightly
           branch: master
-          workflow: minimal-ci.yml # rename: compile-godot.yml
+          workflow: compile-godot.yml # rename: compile-godot.yml
           workflow_conclusion: success
           name: godot-linux
 
@@ -48,4 +48,6 @@ jobs:
       - name: "Write summary"
         run: |
           godotVer=$(./godot.linuxbsd.opt.debug.64 --version || true)
+          gitSha=$(echo $godotVer | sed -E "s/.+custom_build\.//")
           echo "### Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
+          echo "Built from [this engine commit](https://github.com/godotengine/godot/commit/$gitSha)." >> $GITHUB_STEP_SUMMARY
