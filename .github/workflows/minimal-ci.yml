@@ -26,51 +26,61 @@ jobs:
   clone-godot:
     runs-on: ubuntu-latest
     steps:
-#      - name: "Download artifact"
+
+      #      - name: "Download artifact"
+      #       # https://github.com/dawidd6/action-download-artifact
+      #       uses: dawidd6/action-download-artifact@v2
+      #       with:
+      #         # Downloads and unzips the artifact with {name} of the latest run of specified {workflow}
+      #         github_token: ${{ secrets.ARTIFACT_DOWNLOADER_PAT }}
+      #         repo: godotengine/godot
+      #         branch: master
+      #         workflow: linux_builds.yml
+      #         workflow_conclusion: success
+      #         name: linux-editor-mono
+      #
+      #      - name: "Check Godot version"
       #        run: |
-      #          wget https://api.github.com/repos/godotengine/godot/actions/artifacts/252980785/zip
+      #          #cd GodotSharp
+      #          ./godot.linuxbsd.opt.tools.64.mono --version
 
-      - name: "Download artifact"
-        # https://github.com/dawidd6/action-download-artifact
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          # Downloads and unzips the artifact with {name} of the latest run of specified {workflow}
-          github_token: ${{ secrets.ARTIFACT_DOWNLOADER_PAT }}
-          repo: godotengine/godot
-          branch: master
-          workflow: linux_builds.yml
-          workflow_conclusion: success
-          name: linux-editor-mono
 
-      - name: "Check Godot version"
+      - name: "Clone Godot"
         run: |
-          #cd GodotSharp
-          ./godot.linuxbsd.opt.tools.64.mono --version
+          git clone https://github.com/godotengine/godot.git --depth 1 --branch master .
+          echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
+          echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
 
-#      - name: "Clone Godot"
-#        run: |
-#          git clone https://github.com/godotengine/godot.git --depth 1 --branch master
-#          cd godot
-#          echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-#          cd
-#
-#      - name: "Check ${{ env.SHORT_SHA }}"
-#        run: |
-#          echo "Short SHA is: $SHORT_SHA"
-#
-#      - name: "Curdir"
-#        run: |
-#          pwd
-#
-#      - name: "Scons"
-#        run: |
-#          pip install scons==3.1.2
-#          scons --version
+      - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
+        id: cache-godot
+        uses: actions/cache@v2
+        with:
+          path: ${{ runner.temp }}/godot_bin
+          key: godot-${{ runner.os }}-${{ env.SHA }}
 
-#      - name: "Check cache for installed Godot version"
-#        id: "cache-godot"
-#        uses: actions/cache@v2
-#        with:
-#          path: ${{ runner.temp }}/godot_bin
-#          key: godot-${{ runner.os }}-v${{ inputs.godot_ver }}
+      - name: "Linux dependencies"
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          # Azure repositories are not reliable, we need to prevent azure giving us packages.
+          sudo rm -f /etc/apt/sources.list.d/*
+          sudo cp -f misc/ci/sources.list /etc/apt/sources.list
+          sudo apt-get update
+          # The actual dependencies
+          sudo apt-get install build-essential pkg-config libx11-dev libxcursor-dev \
+              libxinerama-dev libgl1-mesa-dev libglu-dev libasound2-dev libpulse-dev \
+              libdbus-1-dev libudev-dev libxi-dev libxrandr-dev yasm xvfb wget unzip \
+              llvm libspeechd-dev speech-dispatcher
+
+      - name: "Scons"
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          pip install scons==3.1.2
+          scons --version
+
+      - name: "Compile Godot..."
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          scons -j$(nproc) platform=linuxbsd tools=no target=release_debug bits=64
+          mv bin ${{ runner.temp }}/godot_bin
 
