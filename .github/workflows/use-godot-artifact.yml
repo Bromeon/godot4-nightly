@@ -44,3 +44,8 @@ jobs:
         run: |
           chmod +x godot.linuxbsd.opt.debug.64
           ./godot.linuxbsd.opt.debug.64 --version || true
+
+      - name: "Write summary"
+        run: |
+          godotVer=$(./godot.linuxbsd.opt.debug.64 --version || true)
+          echo "### Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
