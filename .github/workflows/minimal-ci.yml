@@ -42,6 +42,11 @@ jobs:
           workflow_conclusion: success
           name: linux-editor-mono
 
+      - name: "Check Godot version"
+        run: |
+          #cd GodotSharp
+          ./godot.linuxbsd.opt.tools.64.mono --version
+
 #      - name: "Clone Godot"
 #        run: |
 #          git clone https://github.com/godotengine/godot.git --depth 1 --branch master
