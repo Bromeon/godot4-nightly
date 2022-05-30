@@ -60,7 +60,8 @@ jobs:
       - name: "Compile Godot..."
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
-          scons -j$(nproc) platform=linuxbsd tools=no target=release_debug bits=64
+          scons -j$(nproc) platform=linuxbsd tools=yes target=debug bits=64
+          #scons -j$(nproc) platform=linuxbsd tools=no target=release_debug bits=64
 
       - name: "Make executable"
         if: steps.cache-godot.outputs.cache-hit != 'true'
