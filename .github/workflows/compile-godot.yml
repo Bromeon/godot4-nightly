@@ -65,7 +65,7 @@ jobs:
 
       - name: "Make executable"
         if: steps.cache-godot.outputs.cache-hit != 'true'
-        run: chmod +x bin/godot.linuxbsd.opt.debug.64
+        run: chmod +x bin/godot.*
 
       # Upload artifact also when cached (so last successful workflow always has artifact)
       - name: "Upload artifact"
@@ -76,6 +76,6 @@ jobs:
 
       - name: "Summary"
         run: |
-          godotVer=$(bin/godot.linuxbsd.opt.debug.64 --version || true)
+          godotVer=$(bin/godot.linuxbsd.tools.64 --version || true)
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
           echo "Built from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
