@@ -24,7 +24,7 @@ defaults:
 jobs:
   compile-godot:
     runs-on: ${{ matrix.runner }}
-    name: build-godot-${{ matrix.artifact }}
+    name: ${{ matrix.artifact }}-editor
 
     strategy:
       fail-fast: false
@@ -73,8 +73,8 @@ jobs:
       - name: "Compile Godot..."
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
-          scons -j$(nproc) platform={{ matrix.scons-platform }} tools=yes target=debug bits=64
-          #scons -j$(nproc) platform={{ matrix.scons-platform }} tools=no target=release_debug bits=64
+          scons -j$(nproc) platform=${{ matrix.scons-platform }} tools=yes target=debug bits=64
+          #scons -j$(nproc) platform=${{ matrix.scons-platform }} tools=no target=release_debug bits=64
 
       - name: "Make executable"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.runner == 'ubuntu-latest'
@@ -84,11 +84,11 @@ jobs:
       - name: "Upload artifact"
         uses: actions/upload-artifact@v3
         with:
-          name: godot-{{ matrix.artifact }}
+          name: godot-${{ matrix.artifact }}
           path: bin
 
       - name: "Summary"
         run: |
-          godotVer=$(bin/godot.{{ matrix.scons-platform }}.tools.64 --version || true)
+          godotVer=$(bin/godot.${{ matrix.scons-platform }}.tools.64 --version || true)
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
-          echo "Built for **{{ matrix.artifact }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
+          echo "Built for **${{ matrix.artifact }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
