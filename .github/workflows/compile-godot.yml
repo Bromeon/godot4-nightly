@@ -30,10 +30,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - runner: ubuntu-latest
-          #            artifact: linux
-          #            scons-platform: linuxbsd
-          - runner: windows-latest
+          - id: linux
+            runner: ubuntu-latest
+            artifact: linux
+            scons-platform: linuxbsd
+
+          # Note: we use scons v3 (not v4), which does not recognize Visual Studio 2022 (MSVC v19.32), so we need older runner
+          - id: windows
+            runner: windows-2019
             artifact: windows
             scons-platform: windows
 
@@ -52,7 +56,7 @@ jobs:
           key: godot-${{ runner.os }}-${{ env.SHA }}
 
       - name: "Linux dependencies"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.runner == 'ubuntu-latest'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'linux'
         run: |
           # Azure repositories are not reliable, we need to prevent azure giving us packages.
           sudo rm -f /etc/apt/sources.list.d/*
@@ -64,31 +68,32 @@ jobs:
               libdbus-1-dev libudev-dev libxi-dev libxrandr-dev yasm xvfb wget unzip \
               llvm libspeechd-dev speech-dispatcher
 
-      - name: "Scons"
+      - name: "Install scons"
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
           pip install scons==3.1.2
           scons --version
 
       - name: "Compile Godot (Linux)..."
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.runner == 'ubuntu-latest'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'linux'
         run: |
+          echo "Number of cores: $(nproc)"
           scons -j$(nproc) platform=${{ matrix.scons-platform }} tools=yes target=debug bits=64
           #scons -j$(nproc) platform=${{ matrix.scons-platform }} tools=no target=release_debug bits=64
 
       - name: "Set up MSVC developer console"
         uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.runner == 'windows-latest'
+        if: matrix.id == 'windows'
 
       - name: "Compile Godot (Windows)..."
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.runner == 'windows-latest'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'windows'
         run: |
           cl
-          scons -j%NUMBER_OF_PROCESSORS% platform=${{ matrix.scons-platform }} tools=yes target=debug
+          scons -j2 platform=${{ matrix.scons-platform }} tools=yes target=debug mingw=no
         shell: cmd
 
       - name: "Make executable"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.runner == 'ubuntu-latest'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'linux'
         run: chmod +x bin/godot.*
 
       # Upload artifact also when cached (so last successful workflow always has artifact)
