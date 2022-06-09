@@ -7,6 +7,7 @@ name: Godot build pipeline
 
 
 on:
+  push:
   schedule:
     # Run at 02:47 UTC each morning
     - cron: "47 2 * * *"
@@ -22,9 +23,21 @@ defaults:
 
 jobs:
   compile-godot:
-    runs-on: ubuntu-latest
-    steps:
+    runs-on: ${{ matrix.runner }}
+    name: build-godot-${{ matrix.artifact }}
 
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            artifact: linux
+            scons-platform: linuxbsd
+          - runner: windows-latest
+            artifact: windows
+            scons-platform: windows
+
+    steps:
       - name: "Clone Godot"
         run: |
           git clone https://github.com/godotengine/godot.git --depth 1 --branch master .
@@ -39,7 +52,7 @@ jobs:
           key: godot-${{ runner.os }}-${{ env.SHA }}
 
       - name: "Linux dependencies"
-        if: steps.cache-godot.outputs.cache-hit != 'true'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.runner == 'ubuntu-latest'
         run: |
           # Azure repositories are not reliable, we need to prevent azure giving us packages.
           sudo rm -f /etc/apt/sources.list.d/*
@@ -60,22 +73,22 @@ jobs:
       - name: "Compile Godot..."
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
-          scons -j$(nproc) platform=linuxbsd tools=yes target=debug bits=64
-          #scons -j$(nproc) platform=linuxbsd tools=no target=release_debug bits=64
+          scons -j$(nproc) platform={{ matrix.scons-platform }} tools=yes target=debug bits=64
+          #scons -j$(nproc) platform={{ matrix.scons-platform }} tools=no target=release_debug bits=64
 
       - name: "Make executable"
-        if: steps.cache-godot.outputs.cache-hit != 'true'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.runner == 'ubuntu-latest'
         run: chmod +x bin/godot.*
 
       # Upload artifact also when cached (so last successful workflow always has artifact)
       - name: "Upload artifact"
         uses: actions/upload-artifact@v3
         with:
-          name: godot-linux
+          name: godot-{{ matrix.artifact }}
           path: bin
 
       - name: "Summary"
         run: |
-          godotVer=$(bin/godot.linuxbsd.tools.64 --version || true)
+          godotVer=$(bin/godot.{{ matrix.scons-platform }}.tools.64 --version || true)
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
-          echo "Built from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
+          echo "Built for **{{ matrix.artifact }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
