@@ -105,6 +105,7 @@ jobs:
 
       - name: "Summary"
         run: |
+          ls bin -la
           godotVer=$(bin/godot.${{ matrix.scons-platform }}.tools.64 --version || echo "?")
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
           echo "Built for **${{ matrix.artifact }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
