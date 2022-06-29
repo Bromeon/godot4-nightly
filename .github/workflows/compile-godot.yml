@@ -107,7 +107,7 @@ jobs:
         # Variable shenanigans for trimming leading/trailing whitespace, see https://stackoverflow.com/a/3352015
         run: |
           ls bin -la
-          godotVer=$(bin/godot.${{ matrix.scons-platform }}.tools.64 --version)
+          godotVer=$(bin/godot.${{ matrix.scons-platform }}.tools.64 --version || echo "?")
           godotVer="${godotVer#"${godotVer%%[![:space:]]*}"}"
           godotVer="${godotVer%"${godotVer##*[![:space:]]}"}"
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
