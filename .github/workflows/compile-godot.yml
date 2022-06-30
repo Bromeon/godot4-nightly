@@ -104,11 +104,11 @@ jobs:
           path: bin
 
       - name: "Summary"
-        # Variable shenanigans for trimming leading/trailing whitespace, see https://stackoverflow.com/a/3352015
+        # xargs has the nice side effect of trimming leading/trailing whitespace, see https://stackoverflow.com/a/12973694
+        # The other answers, while more "idiomatic" (if that can even be said for something like bash), are not properly handling newlines
+        # Also, this nicely handles the 255 return type from --version
         run: |
           ls bin -la
-          godotVer=$(bin/godot.${{ matrix.scons-platform }}.tools.64 --version || echo "?")
-          godotVer="${godotVer#"${godotVer%%[![:space:]]*}"}"
-          godotVer="${godotVer%"${godotVer##*[![:space:]]}"}"
+          godotVer=$(bin/godot.${{ matrix.scons-platform }}.tools.64 --version | xargs)
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
           echo "Built for **${{ matrix.artifact }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
