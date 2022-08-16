@@ -55,6 +55,11 @@ jobs:
           path: bin #${{ runner.temp }}/godot_bin
           key: godot-${{ runner.os }}-${{ env.SHA }}
 
+      - name: "Copy GDExtension header"
+        run: |
+          mkdir -p bin
+          cp core/extension/gdnative_interface.h bin/gdnative_interface.h
+
       - name: "Linux dependencies"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'linux'
         run: |
