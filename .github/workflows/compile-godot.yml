@@ -113,6 +113,6 @@ jobs:
         # The other answers, while more "idiomatic" (if that can even be said for something like bash), are not properly handling newlines
         run: |
           ls bin -la
-          godotVer=$(bin/godot.${{ matrix.scons-platform }}.tools.64 --version | xargs)
+          godotVer=$(bin/godot.${{ matrix.scons-platform }}.tools.x86_64 --version | xargs)
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
           echo "Built for **${{ matrix.artifact }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
