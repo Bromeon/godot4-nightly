@@ -83,8 +83,7 @@ jobs:
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'linux'
         run: |
           echo "Number of cores: $(nproc)"
-          scons -j$(nproc) platform=${{ matrix.scons-platform }} tools=yes target=debug bits=64
-          #scons -j$(nproc) platform=${{ matrix.scons-platform }} tools=no target=release_debug bits=64
+          scons -j$(nproc) platform=${{ matrix.scons-platform }} target=editor dev_build=yes
 
       - name: "Set up MSVC developer console"
         uses: ilammy/msvc-dev-cmd@v1
@@ -94,7 +93,7 @@ jobs:
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'windows'
         run: |
           cl
-          scons -j2 platform=${{ matrix.scons-platform }} tools=yes target=debug mingw=no
+          scons -j2 platform=${{ matrix.scons-platform }} target=editor dev_build=yes mingw=no
         shell: cmd
 
       - name: "Make executable"
@@ -113,6 +112,6 @@ jobs:
         # The other answers, while more "idiomatic" (if that can even be said for something like bash), are not properly handling newlines
         run: |
           ls bin -la
-          godotVer=$(bin/godot.${{ matrix.scons-platform }}.tools.x86_64 --version | xargs)
+          godotVer=$(bin/godot.${{ matrix.scons-platform }}.editor.dev.x86_64 --version | xargs)
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
           echo "Built for **${{ matrix.artifact }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
