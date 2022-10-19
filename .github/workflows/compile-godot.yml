@@ -23,6 +23,7 @@ defaults:
 
 jobs:
   compile-godot:
+    # For runners, see https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.artifact }}-editor
 
@@ -30,16 +31,39 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html#doc-compiling-for-linuxbsd
           - id: linux
             runner: ubuntu-latest
             artifact: linux
-            scons-platform: linuxbsd
+            cmd:
+              install-scons: pip install scons==3.1.2
+              scons-platform: linuxbsd
+              # cores: nproc
 
+          # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_macos.html#doc-compiling-for-macos
+          # macOS runners are x86_64
+          - id: macos
+            runner: macos-latest
+            artifact: macos
+            cmd:
+              install-scons: brew install scons
+              scons-platform: macos
+              #cores: --jobs=$(sysctl -n hw.logicalcpu)
+              # arch=x86_64
+              # arch=arm64
+
+          # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_windows.html#doc-compiling-for-windows
           # Note: we use scons v3 (not v4), which does not recognize Visual Studio 2022 (MSVC v19.32), so we need older runner
           - id: windows
             runner: windows-2019
             artifact: windows
-            scons-platform: windows
+            cmd:
+              install-scons: pip install scons==3.1.2
+              scons-platform: windows
+
+        # install-scons: pip install scons==3.1.2
+        # cores: nproc
+
 
     steps:
       - name: "Clone Godot"
@@ -60,7 +84,13 @@ jobs:
           mkdir -p bin
           cp core/extension/gdnative_interface.h bin/gdnative_interface.h
 
-      - name: "Linux dependencies"
+      - name: "Install scons"
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          ${{ matrix.cmd.install-scons }}
+          scons --version
+
+      - name: "[Linux] C dependencies"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'linux'
         run: |
           # Azure repositories are not reliable, we need to prevent azure giving us packages.
@@ -73,27 +103,26 @@ jobs:
               libdbus-1-dev libudev-dev libxi-dev libxrandr-dev yasm xvfb wget unzip \
               llvm libspeechd-dev speech-dispatcher
 
-      - name: "Install scons"
-        if: steps.cache-godot.outputs.cache-hit != 'true'
+      - name: "[macOS] - MoltenVK Vulkan library"
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'macos'
         run: |
-          pip install scons==3.1.2
-          scons --version
+          sh misc/scripts/install_vulkan_sdk_macos.sh
 
-      - name: "Compile Godot (Linux)..."
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'linux'
+      - name: "[Linux|macOS] Compile Godot..."
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id != 'windows'
         run: |
-          echo "Number of cores: $(nproc)"
-          scons -j$(nproc) platform=${{ matrix.scons-platform }} target=editor dev_build=yes
+          #echo "Number of cores: $(${{ matrix.cmd.cores }})"
+          scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes
 
-      - name: "Set up MSVC developer console"
+      - name: "[Windows] - MSVC developer console"
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'windows'
         uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.id == 'windows'
 
-      - name: "Compile Godot (Windows)..."
+      - name: "[Windows] Compile Godot..."
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'windows'
         run: |
           cl
-          scons -j2 platform=${{ matrix.scons-platform }} target=editor dev_build=yes mingw=no
+          scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no
         shell: cmd
 
       - name: "Make executable"
@@ -111,7 +140,7 @@ jobs:
         # xargs has the nice side effect of trimming leading/trailing whitespace, see https://stackoverflow.com/a/12973694
         # The other answers, while more "idiomatic" (if that can even be said for something like bash), are not properly handling newlines
         run: |
-          ls bin -la
-          godotVer=$(bin/godot.${{ matrix.scons-platform }}.editor.dev.x86_64 --version | xargs)
+          ls -la bin
+          godotVer=$(bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev.x86_64 --version | xargs)
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
           echo "Built for **${{ matrix.artifact }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
