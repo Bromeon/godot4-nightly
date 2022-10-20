@@ -67,10 +67,12 @@ jobs:
 
     steps:
       - name: "Clone Godot"
+        # Note: GODOT_BIN file does not yet exist, but the path can already be stored
         run: |
           git clone https://github.com/godotengine/godot.git --depth 1 --branch master .
           echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev.x86_64" >> $GITHUB_ENV
 
       - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
         id: cache-godot
@@ -114,6 +116,10 @@ jobs:
           #echo "Number of cores: $(${{ matrix.cmd.cores }})"
           scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes
 
+      - name: "[Linux|macOS] Make executable"
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id != 'windows'
+        run: chmod +x $GODOT_BIN
+
       - name: "[Windows] - MSVC developer console"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'windows'
         uses: ilammy/msvc-dev-cmd@v1
@@ -124,10 +130,6 @@ jobs:
           cl
           scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no
         shell: cmd
-
-      - name: "Make executable"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'linux'
-        run: chmod +x bin/godot.*
 
       # Upload artifact also when cached (so last successful workflow always has artifact)
       - name: "Upload artifact"
@@ -141,6 +143,6 @@ jobs:
         # The other answers, while more "idiomatic" (if that can even be said for something like bash), are not properly handling newlines
         run: |
           ls -la bin
-          godotVer=$(bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev.x86_64 --version | xargs)
+          godotVer=$($GODOT_BIN --version | xargs)
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
           echo "Built for **${{ matrix.artifact }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
