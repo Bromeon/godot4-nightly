@@ -74,7 +74,7 @@ jobs:
 
       - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
         id: cache-godot
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: bin #${{ runner.temp }}/godot_bin
           key: godot-${{ runner.os }}-${{ env.SHA }}
