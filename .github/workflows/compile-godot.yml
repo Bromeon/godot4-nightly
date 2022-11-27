@@ -34,7 +34,7 @@ jobs:
         include:
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html#doc-compiling-for-linuxbsd
           - id: linux
-            runner: ubuntu-latest
+            runner: ubuntu-20.04
             artifact: linux
             cmd:
               install-scons: pip install scons==3.1.2
