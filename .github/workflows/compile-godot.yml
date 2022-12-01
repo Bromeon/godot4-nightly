@@ -125,11 +125,23 @@ jobs:
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'windows'
         uses: ilammy/msvc-dev-cmd@v1
 
+      # /FS: platform\windows\crash_handler_windows.cpp: fatal error C1041: cannot open program database
       - name: "[Windows] Compile Godot..."
+        id: compile
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'windows'
+        continue-on-error: true
         run: |
           cl
           scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no
+        shell: cmd
+
+      # Workaround for the following error that often happens. /FS did not help.
+      # 'D:\a\godot4-nightly\godot4-nightly\vc140.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
+      - name: "[Windows] Compile Godot with -j1 if previous failed..."
+        if: matrix.id == 'windows' && steps.compile.outcome == 'failure'
+        run: |
+          cl
+          scons -j1 platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no
         shell: cmd
 
       # Upload artifact also when cached (so last successful workflow always has artifact)
