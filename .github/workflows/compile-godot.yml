@@ -85,7 +85,7 @@ jobs:
       - name: "Copy GDExtension header"
         run: |
           mkdir -p bin
-          cp core/extension/gdnative_interface.h bin/gdnative_interface.h
+          cp core/extension/gdextension_interface.h bin/gdextension_interface.h
 
       - name: "Install scons"
         if: steps.cache-godot.outputs.cache-hit != 'true'
