@@ -28,6 +28,16 @@ jobs:
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.artifact }}-editor
 
+    # Some scons flags, from detect.py
+    #  * EnumVariable("linker", "Linker program", "default", ("default", "bfd", "gold", "lld", "mold")),
+    #  * BoolVariable("use_llvm", "Use the LLVM compiler", False),
+    #  * BoolVariable("use_ubsan", "Use LLVM/GCC compiler undefined behavior sanitizer (UBSAN)", False),
+    #  * BoolVariable("use_asan", "Use LLVM/GCC compiler address sanitizer (ASAN)", False),
+    #  * BoolVariable("use_lsan", "Use LLVM/GCC compiler leak sanitizer (LSAN)", False),
+    #  * BoolVariable("use_tsan", "Use LLVM/GCC compiler thread sanitizer (TSAN)", False),
+    #  * BoolVariable("use_msan", "Use LLVM compiler memory sanitizer (MSAN)", False),
+    #
+    # Some sanitizers are incompatible: msan/asan, lsan/tsan, asan/tsan
     strategy:
       fail-fast: false
       matrix:
@@ -40,6 +50,25 @@ jobs:
               install-scons: pip install scons==3.1.2
               scons-platform: linuxbsd
               # cores: nproc
+
+          # https://github.com/godotengine/godot/blob/master/.github/workflows/linux_builds.yml
+          - id: linux-memcheck-gcc
+            runner: ubuntu-20.04
+            artifact: linux-memcheck-gcc
+            cmd:
+              install-scons: pip install scons==3.1.2
+              scons-platform: linuxbsd
+              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes linker=gold
+              binary-postfix: .san
+
+          - id: linux-memcheck-clang
+            runner: ubuntu-20.04
+            artifact: linux-memcheck-clang
+            cmd:
+              install-scons: pip install scons==3.1.2
+              scons-platform: linuxbsd
+              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
+              binary-postfix: .llvm.san
 
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_macos.html#doc-compiling-for-macos
           # macOS runners are x86_64
@@ -73,7 +102,7 @@ jobs:
           git clone https://github.com/godotengine/godot.git --depth 1 --branch master .
           echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev.x86_64" >> $GITHUB_ENV
+          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
 
       - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
         id: cache-godot
@@ -115,11 +144,13 @@ jobs:
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id != 'windows'
         run: |
           #echo "Number of cores: $(${{ matrix.cmd.cores }})"
-          scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes
+          scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes ${{ matrix.cmd.scons-extra-args }}
 
       - name: "[Linux|macOS] Make executable"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id != 'windows'
-        run: chmod +x $GODOT_BIN
+        run: |
+          ls -la bin
+          chmod +x $GODOT_BIN
 
       - name: "[Windows] - MSVC developer console"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'windows'
