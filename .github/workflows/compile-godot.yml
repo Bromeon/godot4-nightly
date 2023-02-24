@@ -111,6 +111,12 @@ jobs:
           path: bin #${{ runner.temp }}/godot_bin
           key: godot-${{ matrix.id }}-${{ env.SHA }}
 
+      - name: "Checkout this repo"
+        uses: actions/checkout@v3
+        with:
+          path: 'repo'
+          clean: 'false'
+
       - name: "Copy GDExtension header"
         run: |
           mkdir -p bin
@@ -122,7 +128,7 @@ jobs:
       # See https://github.com/google/sanitizers/issues/89, which is not solved despite closed.
       - name: "Apply no-dlclose patch for memcheck version"
         run: |
-          git apply res/no-dlclose.patch
+          git apply repo/res/no-dlclose.patch
           git diff
         if: ${{ contains(matrix.id, 'memcheck') }}
 
