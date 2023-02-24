@@ -116,6 +116,16 @@ jobs:
           mkdir -p bin
           cp core/extension/gdextension_interface.h bin/gdextension_interface.h
 
+      # LeakSanitizer cannot know symbols for unloaded dynamic libraries (like the GDExtension Rust one).
+      # Not only will it lose the stacktrace, but it also reports a 1024-byte leak for println!.
+      # Leaving the dynamic library open by not calling dlclose() works around that.
+      # See https://github.com/google/sanitizers/issues/89, which is not solved despite closed.
+      - name: "Apply no-dlclose patch for memcheck version"
+        run: |
+          git apply res/no-dlclose.patch
+          git diff
+        if: ${{ contains(matrix.id, 'memcheck') }}
+
       - name: "Install scons"
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |

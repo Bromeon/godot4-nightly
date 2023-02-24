@@ -1,0 +1,14 @@
+diff --git a/drivers/unix/os_unix.cpp b/drivers/unix/os_unix.cpp
+index 178f01b185..9678c1f128 100644
+--- a/drivers/unix/os_unix.cpp
++++ b/drivers/unix/os_unix.cpp
+@@ -454,9 +454,6 @@ Error OS_Unix::open_dynamic_library(const String p_path, void *&p_library_handle
+ }
+ 
+ Error OS_Unix::close_dynamic_library(void *p_library_handle) {
+-	if (dlclose(p_library_handle)) {
+-		return FAILED;
+-	}
+ 	return OK;
+ }
+ 
