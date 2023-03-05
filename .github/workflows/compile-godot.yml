@@ -44,6 +44,7 @@ jobs:
         include:
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html#doc-compiling-for-linuxbsd
           - id: linux
+            os: linux
             runner: ubuntu-20.04
             cmd:
               install-scons: pip install scons==3.1.2
@@ -51,6 +52,7 @@ jobs:
               # cores: nproc
 
           - id: linux-double
+            os: linux
             runner: ubuntu-20.04
             cmd:
               install-scons: pip install scons==3.1.2
@@ -59,6 +61,7 @@ jobs:
 
           # https://github.com/godotengine/godot/blob/master/.github/workflows/linux_builds.yml
           - id: linux-memcheck-gcc
+            os: linux
             runner: ubuntu-20.04
             cmd:
               install-scons: pip install scons==3.1.2
@@ -67,6 +70,7 @@ jobs:
               binary-postfix: .san
 
           - id: linux-memcheck-clang
+            os: linux
             runner: ubuntu-20.04
             cmd:
               install-scons: pip install scons==3.1.2
@@ -77,6 +81,7 @@ jobs:
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_macos.html#doc-compiling-for-macos
           # macOS runners are x86_64
           - id: macos
+            os: macos
             runner: macos-latest
             cmd:
               install-scons: brew install scons
@@ -86,6 +91,7 @@ jobs:
               # arch=arm64
 
           - id: macos-double
+            os: macos
             runner: macos-latest
             cmd:
               install-scons: brew install scons
@@ -95,12 +101,14 @@ jobs:
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_windows.html#doc-compiling-for-windows
           # Note: we use scons v3 (not v4), which does not recognize Visual Studio 2022 (MSVC v19.32), so we need older runner
           - id: windows
+            os: windows
             runner: windows-2019
             cmd:
               install-scons: pip install scons==3.1.2
               scons-platform: windows
 
           - id: windows-double
+            os: windows
             runner: windows-2019
             cmd:
               install-scons: pip install scons==3.1.2
@@ -155,7 +163,7 @@ jobs:
           scons --version
 
       - name: "[Linux] C dependencies"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'linux'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'linux'
         run: |
           sudo apt-get update
           # The actual dependencies
@@ -165,30 +173,30 @@ jobs:
               llvm libspeechd-dev speech-dispatcher fontconfig libfontconfig-dev
 
       - name: "[macOS] - MoltenVK Vulkan library"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'macos'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'macos'
         run: |
           sh misc/scripts/install_vulkan_sdk_macos.sh
 
       - name: "[Linux|macOS] Compile Godot..."
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id != 'windows'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os != 'windows'
         run: |
           #echo "Number of cores: $(${{ matrix.cmd.cores }})"
           scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes ${{ matrix.cmd.scons-extra-args }}
 
       - name: "[Linux|macOS] Make executable"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id != 'windows'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os != 'windows'
         run: |
           ls -la bin
           chmod +x $GODOT_BIN
 
       - name: "[Windows] - MSVC developer console"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'windows'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'windows'
         uses: ilammy/msvc-dev-cmd@v1
 
       # /FS: platform\windows\crash_handler_windows.cpp: fatal error C1041: cannot open program database
       - name: "[Windows] Compile Godot..."
         id: compile
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.id == 'windows'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'windows'
         continue-on-error: true
         run: |
           cl
@@ -198,7 +206,7 @@ jobs:
       # Workaround for the following error that often happens. /FS did not help.
       # 'D:\a\godot4-nightly\godot4-nightly\vc140.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
       - name: "[Windows] Compile Godot with -j1 if previous failed..."
-        if: matrix.id == 'windows' && steps.compile.outcome == 'failure'
+        if: matrix.os == 'windows' && steps.compile.outcome == 'failure'
         run: |
           cl
           scons -j1 platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no
