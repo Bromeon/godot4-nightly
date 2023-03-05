@@ -58,6 +58,7 @@ jobs:
               install-scons: pip install scons==3.1.2
               scons-platform: linuxbsd
               scons-extra-args: precision=double
+              double-infix: .double
 
           # https://github.com/godotengine/godot/blob/master/.github/workflows/linux_builds.yml
           - id: linux-memcheck-gcc
@@ -97,6 +98,7 @@ jobs:
               install-scons: brew install scons
               scons-platform: macos
               scons-extra-args: precision=double
+              double-infix: .double
 
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_windows.html#doc-compiling-for-windows
           # Note: we use scons v3 (not v4), which does not recognize Visual Studio 2022 (MSVC v19.32), so we need older runner
@@ -114,6 +116,7 @@ jobs:
               install-scons: pip install scons==3.1.2
               scons-platform: windows
               scons-extra-args: precision=double
+              double-infix: .double
 
         # install-scons: pip install scons==3.1.2
         # cores: nproc
@@ -126,7 +129,7 @@ jobs:
           git clone https://github.com/godotengine/godot.git --depth 1 --branch master .
           echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
+          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev${{ matrix.cmd.double-infix }}.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
 
       - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
         id: cache-godot
@@ -200,7 +203,7 @@ jobs:
         continue-on-error: true
         run: |
           cl
-          scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no
+          scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no ${{ matrix.cmd.scons-extra-args }}
         shell: cmd
 
       # Workaround for the following error that often happens. /FS did not help.
@@ -209,7 +212,7 @@ jobs:
         if: matrix.os == 'windows' && steps.compile.outcome == 'failure'
         run: |
           cl
-          scons -j1 platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no
+          scons -j1 platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no ${{ matrix.cmd.scons-extra-args }}
         shell: cmd
 
       # Upload artifact also when cached (so last successful workflow always has artifact)
