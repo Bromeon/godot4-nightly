@@ -9,13 +9,13 @@ name: Godot build pipeline
 on:
   workflow_dispatch: # manual trigger
   push:
-  schedule:
-    # Run at 02:47 UTC each morning
-    - cron: "47 2 * * *"
 
 defaults:
   run:
     shell: bash
+
+env:
+  GODOT_VERSION: '4.0.3'
 
 # If a new commit is pushed before the old one's CI has completed (on the same branch), abort previous run
 #concurrency:
@@ -42,7 +42,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html#doc-compiling-for-linuxbsd
           - id: linux
             os: linux
             runner: ubuntu-20.04
@@ -50,25 +49,6 @@ jobs:
               install-scons: pip install scons==3.1.2
               scons-platform: linuxbsd
               # cores: nproc
-
-          - id: linux-double
-            os: linux
-            runner: ubuntu-20.04
-            cmd:
-              install-scons: pip install scons==3.1.2
-              scons-platform: linuxbsd
-              scons-extra-args: precision=double
-              double-infix: .double
-
-          # https://github.com/godotengine/godot/blob/master/.github/workflows/linux_builds.yml
-          - id: linux-memcheck-gcc
-            os: linux
-            runner: ubuntu-20.04
-            cmd:
-              install-scons: pip install scons==3.1.2
-              scons-platform: linuxbsd
-              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes linker=gold
-              binary-postfix: .san
 
           - id: linux-memcheck-clang
             os: linux
@@ -79,29 +59,13 @@ jobs:
               scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
               binary-postfix: .llvm.san
 
-          # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_macos.html#doc-compiling-for-macos
-          # macOS runners are x86_64
           - id: macos
             os: macos
             runner: macos-latest
             cmd:
               install-scons: brew install scons
               scons-platform: macos
-              #cores: --jobs=$(sysctl -n hw.logicalcpu)
-              # arch=x86_64
-              # arch=arm64
 
-          - id: macos-double
-            os: macos
-            runner: macos-latest
-            cmd:
-              install-scons: brew install scons
-              scons-platform: macos
-              scons-extra-args: precision=double
-              double-infix: .double
-
-          # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_windows.html#doc-compiling-for-windows
-          # Note: we use scons v3 (not v4), which does not recognize Visual Studio 2022 (MSVC v19.32), so we need older runner
           - id: windows
             os: windows
             runner: windows-2019
@@ -109,27 +73,15 @@ jobs:
               install-scons: pip install scons==3.1.2
               scons-platform: windows
 
-          - id: windows-double
-            os: windows
-            runner: windows-2019
-            cmd:
-              install-scons: pip install scons==3.1.2
-              scons-platform: windows
-              scons-extra-args: precision=double
-              double-infix: .double
-
-        # install-scons: pip install scons==3.1.2
-        # cores: nproc
-
 
     steps:
       - name: "Clone Godot"
         # Note: GODOT_BIN file does not yet exist, but the path can already be stored
         run: |
-          git clone https://github.com/godotengine/godot.git --depth 1 --branch master .
+          git clone https://github.com/godotengine/godot.git --depth 1 --branch "$GODOT_VERSION-stable" .
           echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev${{ matrix.cmd.double-infix }}.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
+          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
 
       - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
         id: cache-godot
@@ -143,11 +95,6 @@ jobs:
         with:
           path: 'repo'
           clean: 'false'
-
-      - name: "Copy GDExtension header"
-        run: |
-          mkdir -p bin
-          cp core/extension/gdextension_interface.h bin/gdextension_interface.h
 
       # LeakSanitizer cannot know symbols for unloaded dynamic libraries (like the GDExtension Rust one).
       # Not only will it lose the stacktrace, but it also reports a 1024-byte leak for println!.
@@ -219,7 +166,7 @@ jobs:
       - name: "Upload artifact"
         uses: actions/upload-artifact@v3
         with:
-          name: godot-${{ matrix.id }}
+          name: godot-${{ matrix.id }}-stable
           path: bin
 
       - name: "Summary"
