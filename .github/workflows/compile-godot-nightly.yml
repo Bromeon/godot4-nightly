@@ -1,7 +1,7 @@
 # Compile Godot 4
 # See also: https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html
 
-name: Godot build pipeline
+name: Godot nightly builds
 
 #env:
 
