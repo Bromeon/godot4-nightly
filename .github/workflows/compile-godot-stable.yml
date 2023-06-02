@@ -59,6 +59,16 @@ jobs:
               scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
               binary-postfix: .llvm.san
 
+          # https://github.com/godotengine/godot/blob/master/.github/workflows/linux_builds.yml
+          - id: linux-memcheck-gcc
+            os: linux
+            runner: ubuntu-20.04
+            cmd:
+              install-scons: pip install scons==3.1.2
+              scons-platform: linuxbsd
+              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes linker=gold
+              binary-postfix: .san
+
           - id: macos
             os: macos
             runner: macos-latest
@@ -102,8 +112,11 @@ jobs:
       # See https://github.com/google/sanitizers/issues/89, which is not solved despite closed.
       - name: "Apply no-dlclose patch for memcheck version"
         run: |
-          git apply repo/res/no-dlclose.patch
+          git apply --verbose repo/res/no-dlclose.patch
+          echo "Difference:"
           git diff
+          echo "Occurrence of close:"
+          cat ./drivers/unix/os_unix.cpp | grep close_dynamic_library -B 3 -A 10
         if: ${{ contains(matrix.id, 'memcheck') }}
 
       - name: "Install scons"
