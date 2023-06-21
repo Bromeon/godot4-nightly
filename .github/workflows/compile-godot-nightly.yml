@@ -126,7 +126,7 @@ jobs:
       - name: "Clone Godot"
         # Note: GODOT_BIN file does not yet exist, but the path can already be stored
         run: |
-          git clone https://github.com/godotengine/godot.git --depth 1 --branch master .
+          git clone https://github.com/Bromeon/godot.git --depth 1 --branch feature/gdextension-stringname-ctor .
           echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
           echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev${{ matrix.cmd.double-infix }}.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
