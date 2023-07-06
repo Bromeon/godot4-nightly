@@ -61,14 +61,14 @@ jobs:
               double-infix: .double
 
           # https://github.com/godotengine/godot/blob/master/.github/workflows/linux_builds.yml
-          - id: linux-memcheck-gcc
-            os: linux
-            runner: ubuntu-20.04
-            cmd:
-              install-scons: pip install scons==3.1.2
-              scons-platform: linuxbsd
-              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes linker=gold
-              binary-postfix: .san
+#          - id: linux-memcheck-gcc
+#            os: linux
+#            runner: ubuntu-20.04
+#            cmd:
+#              install-scons: pip install scons==3.1.2
+#              scons-platform: linuxbsd
+#              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes linker=gold
+#              binary-postfix: .san
 
           - id: linux-memcheck-clang
             os: linux
