@@ -15,7 +15,7 @@ defaults:
     shell: bash
 
 env:
-  GODOT_VERSION: '4.0.3'
+  GODOT_VERSION: '4.1'
 
 # If a new commit is pushed before the old one's CI has completed (on the same branch), abort previous run
 #concurrency:
