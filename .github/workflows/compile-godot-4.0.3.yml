@@ -1,7 +1,7 @@
 # Compile Godot 4
 # See also: https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html
 
-name: Godot stable builds
+name: Godot 4.0.3 builds
 
 #env:
 
@@ -26,7 +26,7 @@ jobs:
   compile-godot:
     # For runners, see https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
     runs-on: ${{ matrix.runner }}
-    name: ${{ matrix.id }}-stable
+    name: ${{ matrix.id }}-4.0.3
 
     # Some scons flags, from detect.py
     #  * EnumVariable("linker", "Linker program", "default", ("default", "bfd", "gold", "lld", "mold")),
