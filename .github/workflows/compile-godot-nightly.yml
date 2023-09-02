@@ -3,8 +3,10 @@
 
 name: Godot nightly builds
 
-#env:
-
+# Set this when building against specific Godot revision (e.g. latest master broken)
+env:
+  HARDCODED_REV: 'd2f76e87869b892d7992696e0b381c5afebe3d0d'
+#  HARDCODED_REV: ''
 
 on:
   workflow_dispatch: # manual trigger
@@ -124,9 +126,22 @@ jobs:
 
     steps:
       - name: "Clone Godot"
+        if: env.HARDCODED_REV == ''
         # Note: GODOT_BIN file does not yet exist, but the path can already be stored
         run: |
           git clone https://github.com/godotengine/godot.git --depth 1 --branch master .
+          echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
+          echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev${{ matrix.cmd.double-infix }}.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
+
+      - name: "Clone Godot (specific revision)"
+        if: env.HARDCODED_REV != ''
+        # Note: GODOT_BIN file does not yet exist, but the path can already be stored
+        run: |
+          git init
+          git remote add origin https://github.com/godotengine/godot.git
+          git fetch origin $HARDCODED_REV --depth 1
+          git reset --hard FETCH_HEAD
           echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
           echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev${{ matrix.cmd.double-infix }}.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
