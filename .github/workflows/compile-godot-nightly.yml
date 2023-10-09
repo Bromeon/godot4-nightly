@@ -5,8 +5,8 @@ name: Godot nightly builds
 
 # Set this when building against specific Godot revision (e.g. latest master broken)
 env:
-#  HARDCODED_REV: 'd2f76e87869b892d7992696e0b381c5afebe3d0d'
-  HARDCODED_REV: ''
+  HARDCODED_REV: '1fee40a1897aaff77be3df8ec13d97981e8d8ba8'
+#  HARDCODED_REV: ''
 
 on:
   workflow_dispatch: # manual trigger
