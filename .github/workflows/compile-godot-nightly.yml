@@ -170,7 +170,7 @@ jobs:
       # See https://github.com/google/sanitizers/issues/89, which is not solved despite closed.
       - name: "Apply no-dlclose patch for memcheck version"
         run: |
-          git apply repo/res/no-dlclose.patch
+          git apply repo/res/no-dlclose-4.2.patch
           git diff
         if: ${{ contains(matrix.id, 'memcheck') }}
 

@@ -112,7 +112,7 @@ jobs:
       # See https://github.com/google/sanitizers/issues/89, which is not solved despite closed.
       - name: "Apply no-dlclose patch for memcheck version"
         run: |
-          git apply --verbose repo/res/no-dlclose.patch
+          git apply --verbose repo/res/no-dlclose-4.0.patch
           echo "Difference:"
           git diff
           echo "Occurrence of close:"
