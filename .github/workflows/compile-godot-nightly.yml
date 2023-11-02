@@ -168,11 +168,13 @@ jobs:
       # Not only will it lose the stacktrace, but it also reports a 1024-byte leak for println!.
       # Leaving the dynamic library open by not calling dlclose() works around that.
       # See https://github.com/google/sanitizers/issues/89, which is not solved despite closed.
-      - name: "Apply no-dlclose patch for memcheck version"
-        run: |
-          git apply repo/res/no-dlclose-4.2.patch
-          git diff
-        if: ${{ contains(matrix.id, 'memcheck') }}
+      #
+      # 2023-11-02: no longer needed due to https://github.com/godotengine/godot/pull/84210.
+#      - name: "Apply no-dlclose patch for memcheck version"
+#        run: |
+#          git apply repo/res/no-dlclose-4.2.patch
+#          git diff
+#        if: ${{ contains(matrix.id, 'memcheck') }}
 
       - name: "Install scons"
         if: steps.cache-godot.outputs.cache-hit != 'true'
