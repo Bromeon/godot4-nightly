@@ -170,11 +170,12 @@ jobs:
       # See https://github.com/google/sanitizers/issues/89, which is not solved despite closed.
       #
       # 2023-11-02: no longer needed due to https://github.com/godotengine/godot/pull/84210.
-#      - name: "Apply no-dlclose patch for memcheck version"
-#        run: |
-#          git apply repo/res/no-dlclose-4.2.patch
-#          git diff
-#        if: ${{ contains(matrix.id, 'memcheck') }}
+      # 2023-11-07: re-enabled but only with dlclose() fix and not RTLD_DEEPBIND change.
+      - name: "Apply no-dlclose patch for memcheck version"
+        run: |
+          git apply repo/res/no-dlclose-4.2.patch
+          git diff
+        if: ${{ contains(matrix.id, 'memcheck') }}
 
       - name: "Install scons"
         if: steps.cache-godot.outputs.cache-hit != 'true'
