@@ -1,7 +1,7 @@
 # Compile Godot 4
 # See also: https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html
 
-name: Godot 4.2.x builds
+name: Godot stable builds
 
 #env:
 
@@ -14,8 +14,7 @@ defaults:
   run:
     shell: bash
 
-env:
-  GODOT_VERSION: '4.2'
+#env:
 
 # If a new commit is pushed before the old one's CI has completed (on the same branch), abort previous run
 #concurrency:
@@ -25,8 +24,8 @@ env:
 jobs:
   compile-godot:
     # For runners, see https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-    runs-on: ${{ matrix.runner }}
-    name: ${{ matrix.id }}-stable
+    runs-on: ${{ matrix.build.runner }}
+    name: ${{ matrix.build.id }}-${{ matrix.godot-version }}
 
     # Some scons flags, from detect.py
     #  * EnumVariable("linker", "Linker program", "default", ("default", "bfd", "gold", "lld", "mold")),
@@ -41,64 +40,55 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        build:
           - id: linux
             os: linux
             runner: ubuntu-20.04
-            cmd:
-              install-scons: pip install scons==3.1.2
-              scons-platform: linuxbsd
-              # cores: nproc
+            scons-install-cmd: pip install scons==3.1.2
+            scons-platform: linuxbsd
 
-          - id: linux-memcheck-clang
+          - id: linux-memcheck
             os: linux
             runner: ubuntu-20.04
-            cmd:
-              install-scons: pip install scons==3.1.2
-              scons-platform: linuxbsd
-              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
-              binary-postfix: .llvm.san
-
-          # https://github.com/godotengine/godot/blob/master/.github/workflows/linux_builds.yml
-#          - id: linux-memcheck-gcc
-#            os: linux
-#            runner: ubuntu-20.04
-#            cmd:
-#              install-scons: pip install scons==3.1.2
-#              scons-platform: linuxbsd
-#              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes linker=gold
-#              binary-postfix: .san
+            scons-install-cmd: pip install scons==3.1.2
+            scons-platform: linuxbsd
+            scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
+            binary-postfix: .llvm.san
 
           - id: macos
             os: macos
             runner: macos-latest
-            cmd:
-              install-scons: brew install scons
-              scons-platform: macos
+            scons-install-cmd: brew install scons
+            scons-platform: macos
 
           - id: windows
             os: windows
             runner: windows-2019
-            cmd:
-              install-scons: pip install scons==3.1.2
-              scons-platform: windows
+            scons-install-cmd: pip install scons==3.1.2
+            scons-platform: windows
 
+        godot-version:
+          - '4.0'
+          - '4.1'
+          - '4.2'
 
     steps:
       - name: "Clone Godot"
+        env:
+          GODOT_VERSION: ${{ matrix.godot-version }}
         # Note: GODOT_BIN file does not yet exist, but the path can already be stored
         run: |
           git clone https://github.com/godotengine/godot.git --depth 1 --branch "$GODOT_VERSION-stable" .
           echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.editor.dev.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
+          echo "GODOT_BIN=bin/godot.${{ matrix.build.scons-platform }}.editor.dev.x86_64${{ matrix.build.binary-postfix }}" >> $GITHUB_ENV
 
       - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
         id: cache-godot
         uses: actions/cache@v3
         with:
           path: bin #${{ runner.temp }}/godot_bin
-          key: godot-${{ matrix.id }}-${{ env.SHA }}
+          key: godot-${{ matrix.build.id }}-${{ env.SHA }}
 
       - name: "Checkout this repo"
         uses: actions/checkout@v3
@@ -117,16 +107,16 @@ jobs:
           git diff
           echo "Occurrence of close:"
           cat ./drivers/unix/os_unix.cpp | grep close_dynamic_library -B 3 -A 10
-        if: ${{ contains(matrix.id, 'memcheck') }}
+        if: ${{ contains(matrix.build.id, 'memcheck') }}
 
       - name: "Install scons"
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
-          ${{ matrix.cmd.install-scons }}
+          ${{ matrix.build.scons-install-cmd }}
           scons --version
 
       - name: "[Linux] C dependencies"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'linux'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'linux'
         run: |
           sudo apt-get update
           # The actual dependencies
@@ -136,50 +126,49 @@ jobs:
               llvm libspeechd-dev speech-dispatcher fontconfig libfontconfig-dev
 
       - name: "[macOS] - MoltenVK Vulkan library"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'macos'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'macos'
         run: |
           sh misc/scripts/install_vulkan_sdk_macos.sh
 
       - name: "[Linux|macOS] Compile Godot..."
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os != 'windows'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os != 'windows'
         run: |
-          #echo "Number of cores: $(${{ matrix.cmd.cores }})"
-          scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes ${{ matrix.cmd.scons-extra-args }}
+          scons platform=${{ matrix.build.scons-platform }} target=editor dev_build=yes ${{ matrix.build.scons-extra-args }}
 
       - name: "[Linux|macOS] Make executable"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os != 'windows'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os != 'windows'
         run: |
           ls -la bin
           chmod +x $GODOT_BIN
 
       - name: "[Windows] - MSVC developer console"
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'windows'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'windows'
         uses: ilammy/msvc-dev-cmd@v1
 
       # /FS: platform\windows\crash_handler_windows.cpp: fatal error C1041: cannot open program database
       - name: "[Windows] Compile Godot..."
         id: compile
-        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'windows'
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'windows'
         continue-on-error: true
         run: |
           cl
-          scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no ${{ matrix.cmd.scons-extra-args }}
+          scons platform=${{ matrix.build.scons-platform }} target=editor dev_build=yes mingw=no ${{ matrix.build.scons-extra-args }}
         shell: cmd
 
       # Workaround for the following error that often happens. /FS did not help.
       # 'D:\a\godot4-nightly\godot4-nightly\vc140.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
       - name: "[Windows] Compile Godot with -j1 if previous failed..."
-        if: matrix.os == 'windows' && steps.compile.outcome == 'failure'
+        if: matrix.build.os == 'windows' && steps.compile.outcome == 'failure'
         run: |
           cl
-          scons -j1 platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes mingw=no ${{ matrix.cmd.scons-extra-args }}
+          scons -j1 platform=${{ matrix.build.scons-platform }} target=editor dev_build=yes mingw=no ${{ matrix.build.scons-extra-args }}
         shell: cmd
 
       # Upload artifact also when cached (so last successful workflow always has artifact)
       - name: "Upload artifact"
         uses: actions/upload-artifact@v3
         with:
-          name: godot-${{ matrix.id }}-${{ env.GODOT_VERSION }}
+          name: godot-${{ matrix.build.id }}-${{ matrix.godot-version }}
           path: bin
 
       - name: "Summary"
@@ -189,4 +178,4 @@ jobs:
           ls -la bin
           godotVer=$($GODOT_BIN --version | xargs)
           echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
-          echo "Built for **${{ matrix.id }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
+          echo "Built for **${{ matrix.build.id }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
