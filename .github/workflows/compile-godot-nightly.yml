@@ -72,7 +72,7 @@ jobs:
 #              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes linker=gold
 #              binary-postfix: .san
 
-          - id: linux-memcheck-clang
+          - id: linux-memcheck
             os: linux
             runner: ubuntu-20.04
             cmd:
