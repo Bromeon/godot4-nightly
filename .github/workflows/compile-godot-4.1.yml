@@ -1,7 +1,7 @@
 # Compile Godot 4
 # See also: https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html
 
-name: Godot 4.1 builds
+name: Godot 4.1.x builds
 
 #env:
 
@@ -179,7 +179,7 @@ jobs:
       - name: "Upload artifact"
         uses: actions/upload-artifact@v3
         with:
-          name: godot-${{ matrix.id }}-stable
+          name: godot-${{ matrix.id }}-${{ env.GODOT_VERSION }}
           path: bin
 
       - name: "Summary"
