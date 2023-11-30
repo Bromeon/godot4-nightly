@@ -1,7 +1,7 @@
 # Compile Godot 4
 # See also: https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html
 
-name: Godot stable builds
+name: Godot 4.1 builds
 
 #env:
 
@@ -15,7 +15,7 @@ defaults:
     shell: bash
 
 env:
-  GODOT_VERSION: '4.2'
+  GODOT_VERSION: '4.1.3'
 
 # If a new commit is pushed before the old one's CI has completed (on the same branch), abort previous run
 #concurrency:
