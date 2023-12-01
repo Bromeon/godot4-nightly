@@ -25,7 +25,7 @@ jobs:
   compile-godot:
     # For runners, see https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
     runs-on: ${{ matrix.build.runner }}
-    name: ${{ matrix.build.id }}-${{ matrix.godot-version }}
+    name: ${{ matrix.build.id }}-${{ matrix.godot.godot-version }}
 
     # Some scons flags, from detect.py
     #  * EnumVariable("linker", "Linker program", "default", ("default", "bfd", "gold", "lld", "mold")),
@@ -67,15 +67,18 @@ jobs:
             scons-install-cmd: pip install scons==3.1.2
             scons-platform: windows
 
-        godot-version:
-          - '4.0'
-          - '4.1'
-          - '4.2'
+        godot:
+          - artifact-name: '4.0'
+            godot-version: '4.0.4'
+          - artifact-name: '4.1'
+            godot-version: '4.1.3'
+          - artifact-name: '4.2'
+            godot-version: '4.2'
 
     steps:
       - name: "Clone Godot"
         env:
-          GODOT_VERSION: ${{ matrix.godot-version }}
+          GODOT_VERSION: ${{ matrix.godot.godot-version }}
         # Note: GODOT_BIN file does not yet exist, but the path can already be stored
         run: |
           git clone https://github.com/godotengine/godot.git --depth 1 --branch "$GODOT_VERSION-stable" .
@@ -168,7 +171,7 @@ jobs:
       - name: "Upload artifact"
         uses: actions/upload-artifact@v3
         with:
-          name: godot-${{ matrix.build.id }}-${{ matrix.godot-version }}
+          name: godot-${{ matrix.build.id }}-${{ matrix.godot.artifact-name }}
           path: bin
 
       - name: "Summary"
