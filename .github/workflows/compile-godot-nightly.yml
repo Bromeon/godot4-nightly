@@ -81,6 +81,15 @@ jobs:
               scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
               binary-postfix: .llvm.san
 
+          - id: linux-release
+            os: linux
+            runner: ubuntu-20.04
+            cmd:
+              install-scons: pip install scons==3.1.2
+              scons-platform: linuxbsd
+              scons-extra-args: target=template_release # dev_build=no
+              binary-postfix: .template_release
+
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_macos.html#doc-compiling-for-macos
           # macOS runners are x86_64
           - id: macos
