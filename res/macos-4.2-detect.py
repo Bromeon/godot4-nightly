@@ -32,6 +32,7 @@ def get_opts():
         BoolVariable("use_asan", "Use LLVM/GCC compiler address sanitizer (ASAN)", False),
         BoolVariable("use_tsan", "Use LLVM/GCC compiler thread sanitizer (TSAN)", False),
         BoolVariable("use_coverage", "Use instrumentation codes in the binary (e.g. for code coverage)", False),
+        ("angle_libs", "Path to the ANGLE static libraries", ""),
     ]
 
 
@@ -66,14 +67,13 @@ def get_mvk_sdk_path():
     if not os.path.exists(dirname):
         return ""
 
-    ver_min = ver_parse("1.3.231.0")
     ver_num = ver_parse("0.0.0.0")
     files = os.listdir(dirname)
     lib_name_out = dirname
     for file in files:
         if os.path.isdir(os.path.join(dirname, file)):
             ver_comp = ver_parse(file)
-            if ver_comp > ver_num and ver_comp >= ver_min:
+            if ver_comp > ver_num:
                 # Try new SDK location.
                 lib_name = os.path.join(
                     os.path.join(dirname, file), "macOS/lib/MoltenVK.xcframework/macos-arm64_x86_64/"
@@ -258,12 +258,18 @@ def configure(env: "Environment"):
 
     if env["opengl3"]:
         env.Append(CPPDEFINES=["GLES3_ENABLED"])
-        env.Append(LINKFLAGS=["-framework", "OpenGL"])
+        if env["angle_libs"] != "":
+            env.AppendUnique(CPPDEFINES=["EGL_STATIC"])
+            env.Append(LINKFLAGS=["-L" + env["angle_libs"]])
+            env.Append(LINKFLAGS=["-lANGLE.macos." + env["arch"]])
+            env.Append(LINKFLAGS=["-lEGL.macos." + env["arch"]])
+            env.Append(LINKFLAGS=["-lGLES.macos." + env["arch"]])
+        env.Prepend(CPPPATH=["#thirdparty/angle/include"])
 
     env.Append(LINKFLAGS=["-rpath", "@executable_path/../Frameworks", "-rpath", "@executable_path"])
 
     if env["vulkan"]:
-        env.Append(CPPDEFINES=["VULKAN_ENABLED"])
+        env.Append(CPPDEFINES=["VULKAN_ENABLED", "RD_ENABLED"])
         env.Append(LINKFLAGS=["-framework", "Metal", "-framework", "IOSurface"])
         if not env["use_volk"]:
             env.Append(LINKFLAGS=["-lMoltenVK"])
