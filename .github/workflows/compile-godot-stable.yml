@@ -112,10 +112,16 @@ jobs:
           cat ./drivers/unix/os_unix.cpp | grep close_dynamic_library -B 3 -A 10
         if: ${{ contains(matrix.build.id, 'memcheck') }}
 
-      - name: "Apply macOS Vulkan SDK patch for 4.0, 4.1, 4.2"
-        if: ${{ matrix.build.os == 'macos' && (matrix.godot.artifact-name == '4.0' || matrix.godot.artifact-name == '4.1' || matrix.godot.artifact-name == '4.2') }}
+      # See https://github.com/godotengine/godot/pull/87305
+      - name: "Apply macOS Vulkan SDK patch for 4.0"
+        if: ${{ matrix.build.os == 'macos' && matrix.godot.artifact-name == '4.0' }}
         run: |
-          mv repo/res/macos-4.2-detect.py ./platform/macos/detect.py
+          mv repo/res/macos-4.0-detect.py ./platform/macos/detect.py
+
+      - name: "Apply macOS Vulkan SDK patch for 4.1, 4.2"
+        if: ${{ matrix.build.os == 'macos' && (matrix.godot.artifact-name == '4.1' || matrix.godot.artifact-name == '4.2') }}
+        run: |
+          mv repo/res/macos-4.1-detect.py ./platform/macos/detect.py
 
       - name: "Install scons"
         if: steps.cache-godot.outputs.cache-hit != 'true'
