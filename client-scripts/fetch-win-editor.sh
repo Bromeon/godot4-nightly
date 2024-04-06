@@ -36,7 +36,6 @@ else
 	oldGitSha="(none)"
 fi
 
-
 # Find URL with latest artifact named 'godot-windows'
 url=$(curl "https://api.github.com/repos/$repo/actions/artifacts" | jq ".artifacts[] | select(.name==\"godot-windows\") | .archive_download_url" | head -n 1 | sed 's/\"//g')
 

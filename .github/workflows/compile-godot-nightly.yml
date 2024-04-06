@@ -98,6 +98,7 @@ jobs:
             cmd:
               install-scons: brew install scons
               scons-platform: macos
+              arch: arm64
               #cores: --jobs=$(sysctl -n hw.logicalcpu)
               # arch=x86_64
               # arch=arm64
@@ -110,6 +111,7 @@ jobs:
               scons-platform: macos
               scons-extra-args: precision=double
               infix: editor.dev.double
+              arch: arm64
 
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_windows.html#doc-compiling-for-windows
           # Note: we use scons v3 (not v4), which does not recognize Visual Studio 2022 (MSVC v19.32), so we need older runner
@@ -141,7 +143,13 @@ jobs:
           git clone https://github.com/godotengine/godot.git --depth 1 --branch master .
           echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.${{ matrix.cmd.infix || 'editor.dev' }}.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
+          
+          platform=${{ matrix.cmd.scons-platform }}
+          infix=${{ matrix.cmd.infix || 'editor.dev' }}
+          arch=${{ matrix.cmd.arch || 'x86_64' }}
+          binaryPostfix=${{ matrix.cmd.binary-postfix }}
+          echo "GODOT_BIN=bin/godot.$platform.$infix.$arch$binaryPostfix" >> $GITHUB_ENV
+          
 
       - name: "Clone Godot (specific revision)"
         if: env.HARDCODED_REV != ''
@@ -153,7 +161,12 @@ jobs:
           git reset --hard FETCH_HEAD
           echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-          echo "GODOT_BIN=bin/godot.${{ matrix.cmd.scons-platform }}.${{ matrix.cmd.infix || 'editor.dev' }}.x86_64${{ matrix.cmd.binary-postfix }}" >> $GITHUB_ENV
+          
+          platform=${{ matrix.cmd.scons-platform }}
+          infix=${{ matrix.cmd.infix || 'editor.dev' }}
+          arch=${{ matrix.cmd.arch || 'x86_64' }}
+          binaryPostfix=${{ matrix.cmd.binary-postfix }}
+          echo "GODOT_BIN=bin/godot.$platform.$infix.$arch$binaryPostfix" >> $GITHUB_ENV
 
       - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
         id: cache-godot

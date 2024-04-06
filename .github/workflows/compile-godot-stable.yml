@@ -60,6 +60,7 @@ jobs:
             runner: macos-latest
             scons-install-cmd: brew install scons
             scons-platform: macos
+            arch: arm64
 
           - id: windows
             os: windows
@@ -84,7 +85,11 @@ jobs:
           git clone https://github.com/godotengine/godot.git --depth 1 --branch "$GODOT_VERSION-stable" .
           echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
           echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-          echo "GODOT_BIN=bin/godot.${{ matrix.build.scons-platform }}.editor.dev.x86_64${{ matrix.build.binary-postfix }}" >> $GITHUB_ENV
+          
+          platform=${{ matrix.build.scons-platform }}
+          arch=${{ matrix.build.arch || 'x86_64' }}
+          binaryPostfix=${{ matrix.build.binary-postfix }}
+          echo "GODOT_BIN=bin/godot.$platform.editor.dev.$arch$binaryPostfix" >> $GITHUB_ENV
 
       - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
         id: cache-godot
