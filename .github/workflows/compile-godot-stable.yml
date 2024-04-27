@@ -1,0 +1,209 @@
+# Compile Godot 4
+# See also: https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html
+
+name: Godot stable builds
+
+#env:
+
+
+on:
+  workflow_dispatch: # manual trigger
+  push:
+
+defaults:
+  run:
+    shell: bash
+
+#env:
+
+# If a new commit is pushed before the old one's CI has completed (on the same branch), abort previous run
+#concurrency:
+#  group: ${{ github.head_ref }}
+#  cancel-in-progress: true
+
+jobs:
+  compile-godot:
+    # For runners, see https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+    runs-on: ${{ matrix.build.runner }}
+    name: ${{ matrix.build.id }}-${{ matrix.godot.godot-version }}
+
+    # Some scons flags, from detect.py
+    #  * EnumVariable("linker", "Linker program", "default", ("default", "bfd", "gold", "lld", "mold")),
+    #  * BoolVariable("use_llvm", "Use the LLVM compiler", False),
+    #  * BoolVariable("use_ubsan", "Use LLVM/GCC compiler undefined behavior sanitizer (UBSAN)", False),
+    #  * BoolVariable("use_asan", "Use LLVM/GCC compiler address sanitizer (ASAN)", False),
+    #  * BoolVariable("use_lsan", "Use LLVM/GCC compiler leak sanitizer (LSAN)", False),
+    #  * BoolVariable("use_tsan", "Use LLVM/GCC compiler thread sanitizer (TSAN)", False),
+    #  * BoolVariable("use_msan", "Use LLVM compiler memory sanitizer (MSAN)", False),
+    #
+    # Some sanitizers are incompatible: msan/asan, lsan/tsan, asan/tsan
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - id: linux
+            os: linux
+            runner: ubuntu-20.04
+            scons-install-cmd: pip install scons==3.1.2
+            scons-platform: linuxbsd
+
+          - id: linux-memcheck
+            os: linux
+            runner: ubuntu-20.04
+            scons-install-cmd: pip install scons==3.1.2
+            scons-platform: linuxbsd
+            scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
+            binary-postfix: .llvm.san
+
+          - id: macos
+            os: macos
+            runner: macos-latest
+            scons-install-cmd: brew install scons
+            scons-platform: macos
+            arch: arm64
+
+          - id: windows
+            os: windows
+            runner: windows-2019
+            scons-install-cmd: pip install scons==3.1.2
+            scons-platform: windows
+
+        godot:
+          - artifact-name: '4.1'
+            godot-version: '4.1.4'
+          - artifact-name: '4.2'
+            godot-version: '4.2.2'
+
+        # Special case 4.0 for linux-memcheck
+        include:
+          - build:
+              id: linux-memcheck
+              os: linux
+              runner: ubuntu-20.04
+              scons-install-cmd: pip install scons==3.1.2
+              scons-platform: linuxbsd
+              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
+              binary-postfix: .llvm.san
+            godot:
+              artifact-name: '4.0'
+              godot-version: '4.0.4'
+
+
+
+    steps:
+      - name: "Clone Godot"
+        env:
+          GODOT_VERSION: ${{ matrix.godot.godot-version }}
+        # Note: GODOT_BIN file does not yet exist, but the path can already be stored
+        run: |
+          git clone https://github.com/godotengine/godot.git --depth 1 --branch "$GODOT_VERSION-stable" .
+          echo "SHA=`git rev-parse HEAD`" >> $GITHUB_ENV
+          echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+          
+          platform=${{ matrix.build.scons-platform }}
+          arch=${{ matrix.build.arch || 'x86_64' }}
+          binaryPostfix=${{ matrix.build.binary-postfix }}
+          echo "GODOT_BIN=bin/godot.$platform.editor.dev.$arch$binaryPostfix" >> $GITHUB_ENV
+
+      - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: bin #${{ runner.temp }}/godot_bin
+          key: godot-${{ matrix.build.id }}-${{ env.SHA }}
+
+      - name: "Checkout this repo"
+        uses: actions/checkout@v4
+        with:
+          path: 'repo'
+          clean: 'false'
+
+      # LeakSanitizer cannot know symbols for unloaded dynamic libraries (like the GDExtension Rust one).
+      # Not only will it lose the stacktrace, but it also reports a 1024-byte leak for println!.
+      # Leaving the dynamic library open by not calling dlclose() works around that.
+      # See https://github.com/google/sanitizers/issues/89, which is not solved despite closed.
+      - name: "Apply no-dlclose patch for memcheck version"
+        run: |
+          git apply --verbose repo/res/no-dlclose-4.0.patch
+          echo "Difference:"
+          git diff
+          echo "Occurrence of close:"
+          cat ./drivers/unix/os_unix.cpp | grep close_dynamic_library -B 3 -A 10
+        if: ${{ contains(matrix.build.id, 'memcheck') }}
+
+      # See https://github.com/godotengine/godot/pull/87305
+      - name: "Apply macOS Vulkan SDK patch for 4.0, 4.1, 4.2"
+        if: ${{ matrix.build.os == 'macos' && (matrix.godot.artifact-name == '4.0' || matrix.godot.artifact-name == '4.1' || matrix.godot.artifact-name == '4.2') }}
+        run: |
+          mv "repo/res/macos-${{ matrix.godot.artifact-name }}-detect.py" ./platform/macos/detect.py
+
+      - name: "Install scons"
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          ${{ matrix.build.scons-install-cmd }}
+          scons --version
+
+      - name: "[Linux] C dependencies"
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'linux'
+        run: |
+          sudo apt-get update
+          # The actual dependencies
+          sudo apt-get install build-essential pkg-config libx11-dev libxcursor-dev \
+              libxinerama-dev libgl1-mesa-dev libglu-dev libasound2-dev libpulse-dev \
+              libdbus-1-dev libudev-dev libxi-dev libxrandr-dev yasm xvfb wget unzip \
+              llvm libspeechd-dev speech-dispatcher fontconfig libfontconfig-dev
+
+      - name: "[macOS] - MoltenVK Vulkan library"
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'macos'
+        run: |
+          sh misc/scripts/install_vulkan_sdk_macos.sh
+
+      - name: "[Linux|macOS] Compile Godot..."
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os != 'windows'
+        run: |
+          scons platform=${{ matrix.build.scons-platform }} target=editor dev_build=yes ${{ matrix.build.scons-extra-args }}
+
+      - name: "[Linux|macOS] Make executable"
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os != 'windows'
+        run: |
+          ls -la bin
+          chmod +x $GODOT_BIN
+
+      - name: "[Windows] - MSVC developer console"
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # /FS: platform\windows\crash_handler_windows.cpp: fatal error C1041: cannot open program database
+      - name: "[Windows] Compile Godot..."
+        id: compile
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'windows'
+        continue-on-error: true
+        run: |
+          cl
+          scons platform=${{ matrix.build.scons-platform }} target=editor dev_build=yes mingw=no ${{ matrix.build.scons-extra-args }}
+        shell: cmd
+
+      # Workaround for the following error that often happens. /FS did not help.
+      # 'D:\a\godot4-nightly\godot4-nightly\vc140.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
+      - name: "[Windows] Compile Godot with -j1 if previous failed..."
+        if: matrix.build.os == 'windows' && steps.compile.outcome == 'failure'
+        run: |
+          cl
+          scons -j1 platform=${{ matrix.build.scons-platform }} target=editor dev_build=yes mingw=no ${{ matrix.build.scons-extra-args }}
+        shell: cmd
+
+      # Upload artifact also when cached (so last successful workflow always has artifact)
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-${{ matrix.build.id }}-${{ matrix.godot.artifact-name }}
+          path: bin
+
+      - name: "Summary"
+        # xargs has the nice side effect of trimming leading/trailing whitespace, see https://stackoverflow.com/a/12973694
+        # The other answers, while more "idiomatic" (if that can even be said for something like bash), are not properly handling newlines
+        run: |
+          ls -la bin
+          godotVer=$($GODOT_BIN --version | xargs)
+          echo "## Godot version: \`$godotVer\`" >> $GITHUB_STEP_SUMMARY
+          echo "Built for **${{ matrix.build.id }}** from commit [\`$SHA\`](https://github.com/godotengine/godot/commit/$SHA)." >> $GITHUB_STEP_SUMMARY
