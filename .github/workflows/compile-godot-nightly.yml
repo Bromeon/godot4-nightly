@@ -91,8 +91,8 @@ jobs:
               infix: template_release # template_release.dev (if dev_build=yes)
 
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_macos.html#doc-compiling-for-macos
-          # macOS runners are x86_64
-          - id: macos
+          # macOS runners are arm
+          - id: macos-arm
             os: macos
             runner: macos-latest
             cmd:
@@ -103,7 +103,7 @@ jobs:
               # arch=x86_64
               # arch=arm64
 
-          - id: macos-double
+          - id: macos-double-arm
             os: macos
             runner: macos-latest
             cmd:
@@ -112,6 +112,24 @@ jobs:
               scons-extra-args: precision=double
               infix: editor.dev.double
               arch: arm64
+
+          - id: macos-x86
+            os: macos
+            runner: macos-latest
+            cmd:
+              install-scons: brew install scons
+              scons-platform: macos
+              arch: x86_64
+
+          - id: macos-double-x86
+            os: macos
+            runner: macos-latest
+            cmd:
+              install-scons: brew install scons
+              scons-platform: macos
+              scons-extra-args: precision=double
+              infix: editor.dev.double
+              arch: x86_64
 
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_windows.html#doc-compiling-for-windows
           # Note: we use scons v3 (not v4), which does not recognize Visual Studio 2022 (MSVC v19.32), so we need older runner
@@ -223,8 +241,9 @@ jobs:
       - name: "[Linux|macOS] Compile Godot..."
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os != 'windows'
         run: |
+          arch=${{ matrix.cmd.arch || 'x86_64' }}
           #echo "Number of cores: $(${{ matrix.cmd.cores }})"
-          scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes ${{ matrix.cmd.scons-extra-args }}
+          scons platform=${{ matrix.cmd.scons-platform }} target=editor dev_build=yes arch=$arch ${{ matrix.cmd.scons-extra-args }}
 
       - name: "[Linux|macOS] Make executable"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os != 'windows'

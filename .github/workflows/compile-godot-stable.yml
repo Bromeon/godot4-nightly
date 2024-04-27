@@ -55,12 +55,19 @@ jobs:
             scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
             binary-postfix: .llvm.san
 
-          - id: macos
+          - id: macos-arm
             os: macos
             runner: macos-latest
             scons-install-cmd: brew install scons
             scons-platform: macos
             arch: arm64
+
+          - id: macos-x86
+            os: macos
+            runner: macos-latest
+            scons-install-cmd: brew install scons
+            scons-platform: macos
+            arch: x86_64
 
           - id: windows
             os: windows
@@ -161,7 +168,8 @@ jobs:
       - name: "[Linux|macOS] Compile Godot..."
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os != 'windows'
         run: |
-          scons platform=${{ matrix.build.scons-platform }} target=editor dev_build=yes ${{ matrix.build.scons-extra-args }}
+          arch=${{ matrix.cmd.arch || 'x86_64' }}
+          scons platform=${{ matrix.build.scons-platform }} target=editor arch=$arch dev_build=yes ${{ matrix.build.scons-extra-args }}
 
       - name: "[Linux|macOS] Make executable"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os != 'windows'
