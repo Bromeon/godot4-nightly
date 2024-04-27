@@ -170,13 +170,13 @@ jobs:
 
       - name: "Check cache for Godot version ${{ env.SHORT_SHA }}"
         id: cache-godot
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: bin #${{ runner.temp }}/godot_bin
           key: godot-${{ matrix.id }}-${{ env.SHA }}
 
       - name: "Checkout this repo"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: 'repo'
           clean: 'false'
@@ -257,7 +257,7 @@ jobs:
 
       # Upload artifact also when cached (so last successful workflow always has artifact)
       - name: "Upload artifact"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: godot-${{ matrix.id }}-nightly
           path: bin
