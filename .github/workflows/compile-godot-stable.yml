@@ -168,7 +168,7 @@ jobs:
       - name: "[Linux|macOS] Compile Godot..."
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os != 'windows'
         run: |
-          arch=${{ matrix.cmd.arch || 'x86_64' }}
+          arch=${{ matrix.build.arch || 'x86_64' }}
           scons platform=${{ matrix.build.scons-platform }} target=editor arch=$arch dev_build=yes ${{ matrix.build.scons-extra-args }}
 
       - name: "[Linux|macOS] Make executable"
