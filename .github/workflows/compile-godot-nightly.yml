@@ -49,7 +49,7 @@ jobs:
             os: linux
             runner: ubuntu-20.04
             cmd:
-              install-scons: pip install scons==3.1.2
+              install-scons: pip install scons
               scons-platform: linuxbsd
               # cores: nproc
 
@@ -57,7 +57,7 @@ jobs:
             os: linux
             runner: ubuntu-20.04
             cmd:
-              install-scons: pip install scons==3.1.2
+              install-scons: pip install scons
               scons-platform: linuxbsd
               scons-extra-args: precision=double
               infix: editor.dev.double
@@ -67,7 +67,7 @@ jobs:
 #            os: linux
 #            runner: ubuntu-20.04
 #            cmd:
-#              install-scons: pip install scons==3.1.2
+#              install-scons: pip install scons
 #              scons-platform: linuxbsd
 #              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes linker=gold
 #              binary-postfix: .san
@@ -76,7 +76,7 @@ jobs:
             os: linux
             runner: ubuntu-20.04
             cmd:
-              install-scons: pip install scons==3.1.2
+              install-scons: pip install scons
               scons-platform: linuxbsd
               scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
               binary-postfix: .llvm.san
@@ -85,7 +85,7 @@ jobs:
             os: linux
             runner: ubuntu-20.04
             cmd:
-              install-scons: pip install scons==3.1.2
+              install-scons: pip install scons
               scons-platform: linuxbsd
               scons-extra-args: target=template_release dev_build=no
               infix: template_release # template_release.dev (if dev_build=yes)
@@ -137,19 +137,19 @@ jobs:
             os: windows
             runner: windows-2019
             cmd:
-              install-scons: pip install scons==3.1.2
+              install-scons: pip install scons
               scons-platform: windows
 
           - id: windows-double
             os: windows
             runner: windows-2019
             cmd:
-              install-scons: pip install scons==3.1.2
+              install-scons: pip install scons
               scons-platform: windows
               scons-extra-args: precision=double
               infix: editor.dev.double
 
-        # install-scons: pip install scons==3.1.2
+        # install-scons: pip install scons
         # cores: nproc
 
 
