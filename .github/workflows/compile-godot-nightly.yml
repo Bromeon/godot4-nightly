@@ -8,6 +8,7 @@ env:
 #  HARDCODED_REV: '1fee40a1897aaff77be3df8ec13d97981e8d8ba8'
   HARDCODED_REV: ''
 
+
 on:
   workflow_dispatch: # manual trigger
   push:
@@ -15,9 +16,11 @@ on:
     # Run at 02:47 UTC each morning
     - cron: "47 2 * * *"
 
+
 defaults:
   run:
     shell: bash
+
 
 # If a new commit is pushed before the old one's CI has completed (on the same branch), abort previous run
 #concurrency:
