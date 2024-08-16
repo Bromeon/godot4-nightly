@@ -84,18 +84,18 @@ jobs:
             godot-version: '4.3'
 
         # Special case 4.0 for linux-memcheck
-        include:
-          - build:
-              id: linux-memcheck
-              os: linux
-              runner: ubuntu-20.04
-              scons-install-cmd: pip install scons
-              scons-platform: linuxbsd
-              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
-              binary-postfix: .llvm.san
-            godot:
-              artifact-name: '4.0'
-              godot-version: '4.0.4'
+#        include:
+#          - build:
+#              id: linux-memcheck
+#              os: linux
+#              runner: ubuntu-20.04
+#              scons-install-cmd: pip install scons
+#              scons-platform: linuxbsd
+#              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
+#              binary-postfix: .llvm.san
+#            godot:
+#              artifact-name: '4.0'
+#              godot-version: '4.0.4'
 
 
 
