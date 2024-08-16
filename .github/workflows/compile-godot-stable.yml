@@ -80,6 +80,8 @@ jobs:
             godot-version: '4.1.4'
           - artifact-name: '4.2'
             godot-version: '4.2.2'
+          - artifact-name: '4.3'
+            godot-version: '4.3'
 
         # Special case 4.0 for linux-memcheck
         include:
