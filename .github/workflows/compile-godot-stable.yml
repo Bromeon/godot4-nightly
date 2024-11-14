@@ -43,13 +43,13 @@ jobs:
         build:
           - id: linux
             os: linux
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
             scons-install-cmd: pip install scons
             scons-platform: linuxbsd
 
           - id: linux-memcheck
             os: linux
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
             scons-install-cmd: pip install scons
             scons-platform: linuxbsd
             scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld
@@ -88,7 +88,7 @@ jobs:
 #          - build:
 #              id: linux-memcheck
 #              os: linux
-#              runner: ubuntu-20.04
+#              runner: ubuntu-22.04
 #              scons-install-cmd: pip install scons
 #              scons-platform: linuxbsd
 #              scons-extra-args: use_asan=yes use_ubsan=yes use_lsan=yes use_llvm=yes linker=lld

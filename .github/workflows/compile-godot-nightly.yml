@@ -50,7 +50,7 @@ jobs:
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_linuxbsd.html#doc-compiling-for-linuxbsd
           - id: linux
             os: linux
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
             cmd:
               install-scons: pip install scons
               scons-platform: linuxbsd
@@ -58,7 +58,7 @@ jobs:
 
           - id: linux-double
             os: linux
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
             cmd:
               install-scons: pip install scons
               scons-platform: linuxbsd
@@ -68,7 +68,7 @@ jobs:
           # https://github.com/godotengine/godot/blob/master/.github/workflows/linux_builds.yml
 #          - id: linux-memcheck-gcc
 #            os: linux
-#            runner: ubuntu-20.04
+#            runner: ubuntu-22.04
 #            cmd:
 #              install-scons: pip install scons
 #              scons-platform: linuxbsd
@@ -77,7 +77,7 @@ jobs:
 
           - id: linux-memcheck
             os: linux
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
             cmd:
               install-scons: pip install scons
               scons-platform: linuxbsd
@@ -86,7 +86,7 @@ jobs:
 
           - id: linux-release
             os: linux
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
             cmd:
               install-scons: pip install scons
               scons-platform: linuxbsd
