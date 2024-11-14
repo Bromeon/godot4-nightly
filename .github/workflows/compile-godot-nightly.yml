@@ -138,14 +138,14 @@ jobs:
           # Note: we use scons v3 (not v4), which does not recognize Visual Studio 2022 (MSVC v19.32), so we need older runner
           - id: windows
             os: windows
-            runner: windows-2019
+            runner: windows-2022
             cmd:
               install-scons: pip install scons
               scons-platform: windows
 
           - id: windows-double
             os: windows
-            runner: windows-2019
+            runner: windows-2022
             cmd:
               install-scons: pip install scons
               scons-platform: windows
