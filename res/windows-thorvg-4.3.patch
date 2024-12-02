@@ -1,0 +1,24 @@
+diff --git a/thirdparty/thorvg/src/common/tvgLock.h b/thirdparty/thorvg/src/common/tvgLock.h
+index 59f68d0d44..691089e3c5 100644
+--- a/thirdparty/thorvg/src/common/tvgLock.h
++++ b/thirdparty/thorvg/src/common/tvgLock.h
+@@ -25,7 +25,6 @@
+ 
+ #ifdef THORVG_THREAD_SUPPORT
+ 
+-#define _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
+ 
+ #include <mutex>
+ #include "tvgTaskScheduler.h"
+diff --git a/thirdparty/thorvg/src/renderer/tvgTaskScheduler.h b/thirdparty/thorvg/src/renderer/tvgTaskScheduler.h
+index 93f8481707..901f78be32 100644
+--- a/thirdparty/thorvg/src/renderer/tvgTaskScheduler.h
++++ b/thirdparty/thorvg/src/renderer/tvgTaskScheduler.h
+@@ -23,7 +23,6 @@
+ #ifndef _TVG_TASK_SCHEDULER_H_
+ #define _TVG_TASK_SCHEDULER_H_
+ 
+-#define _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
+ 
+ #include <mutex>
+ #include <condition_variable>

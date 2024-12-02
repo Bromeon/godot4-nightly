@@ -188,7 +188,22 @@ jobs:
           ls -la bin
           chmod +x $GODOT_BIN
 
-      - name: "[Windows] - MSVC developer console"
+      # Works around following error:
+      #  C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.42.34433\include\mutex(37): error C3861: '_Mtx_init_in_situ': identifier not found
+      #  C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.42.34433\include\mutex(536): error C3861: '_Cnd_init_in_situ': identifier not found
+      #  C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.42.34433\include\condition_variable(56): error C3861: '_Cnd_init_in_situ': identifier not found
+      # scons: *** [thirdparty\thorvg\src\loaders\svg\tvgSvgLoader.windows.editor.dev.x86_64.obj] Error 2
+      #
+      # See https://github.com/godotengine/godot/issues/95861.
+      # Will be fixed for Godot >= 4.3.
+      - name: "[Windows] Work around thorvg compile error"
+        if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'windows' && matrix.godot.artifact-name == '4.3'
+        # dos2unix: restore original line endings, if Git checks out with CRLF
+        run: |
+          dos2unix repo/res/windows-thorvg-4.3.patch
+          git apply --verbose --ignore-whitespace repo/res/windows-thorvg-4.3.patch
+
+      - name: "[Windows] MSVC developer console"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'windows'
         uses: ilammy/msvc-dev-cmd@v1
 
