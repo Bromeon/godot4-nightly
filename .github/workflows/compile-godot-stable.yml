@@ -78,10 +78,15 @@ jobs:
         godot:
           - artifact-name: '4.1'
             godot-version: '4.1.4'
+            git-branch: '4.1'
+
           - artifact-name: '4.2'
             godot-version: '4.2.2'
+            git-branch: '4.2'
+
           - artifact-name: '4.3'
             godot-version: '4.3'
+            git-branch: '4.3'
 
         # Special case 4.0 for linux-memcheck
 #        include:
@@ -164,7 +169,10 @@ jobs:
 
       - name: "[macOS] - MoltenVK Vulkan library"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'macos'
+        # Pull in newer script as that has changed in branch: https://github.com/godotengine/godot/pull/97981
         run: |
+          git fetch origin ${{ matrix.godot.git-branch }}
+          git restore --source "origin/${{ matrix.godot.git-branch }}" -- misc/scripts/install_vulkan_sdk_macos.sh 
           sh misc/scripts/install_vulkan_sdk_macos.sh
 
       - name: "[Linux|macOS] Compile Godot..."
