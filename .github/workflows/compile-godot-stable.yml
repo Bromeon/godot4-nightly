@@ -172,7 +172,8 @@ jobs:
         # Pull in newer script as that has changed in branch: https://github.com/godotengine/godot/pull/97981
         run: |
           git fetch origin ${{ matrix.godot.git-branch }}
-          git restore --source "origin/${{ matrix.godot.git-branch }}" -- misc/scripts/install_vulkan_sdk_macos.sh 
+          git restore --source FETCH_HEAD -- misc/scripts/install_vulkan_sdk_macos.sh
+          git diff
           sh misc/scripts/install_vulkan_sdk_macos.sh
 
       - name: "[Linux|macOS] Compile Godot..."
