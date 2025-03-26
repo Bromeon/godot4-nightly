@@ -92,7 +92,7 @@ jobs:
             git-branch: '4.3'
 
           - artifact-name: '4.4'
-            godot-version: '4.4'
+            godot-version: '4.4.1'
             git-branch: '4.4'
 
         # Special case 4.0 for linux-memcheck
