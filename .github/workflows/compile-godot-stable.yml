@@ -144,17 +144,17 @@ jobs:
       # Leaving the dynamic library open by not calling dlclose() works around that.
       # See https://github.com/google/sanitizers/issues/89, which is not solved despite closed.
       - name: "Apply no-dlclose patch for memcheck version"
+        if: ${{ contains(matrix.build.id, 'memcheck') }}
         run: |
           git apply --verbose repo/res/no-dlclose-4.0.patch
           echo "Difference:"
           git diff
           echo "Occurrence of close:"
           cat ./drivers/unix/os_unix.cpp | grep close_dynamic_library -B 3 -A 10
-        if: ${{ contains(matrix.build.id, 'memcheck') }}
 
       # See https://github.com/godotengine/godot/pull/87305
-      - name: "Apply macOS Vulkan SDK patch for 4.0, 4.1, 4.2"
-        if: ${{ matrix.build.os == 'macos' && (matrix.godot.artifact-name == '4.0' || matrix.godot.artifact-name == '4.1' || matrix.godot.artifact-name == '4.2') }}
+      - name: "Apply macOS Vulkan SDK patch for 4.1, 4.2, 4.5"
+        if: ${{ matrix.build.os == 'macos' && (matrix.godot.artifact-name == '4.1' || matrix.godot.artifact-name == '4.2' || matrix.godot.artifact-name == '4.5') }}
         run: |
           mv "repo/res/macos-${{ matrix.godot.artifact-name }}-detect.py" ./platform/macos/detect.py
 
