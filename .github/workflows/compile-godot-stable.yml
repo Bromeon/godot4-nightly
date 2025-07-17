@@ -174,10 +174,13 @@ jobs:
               libdbus-1-dev libudev-dev libxi-dev libxrandr-dev yasm xvfb wget unzip \
               llvm libspeechd-dev speech-dispatcher fontconfig libfontconfig-dev
 
-      - name: "[macOS] - MoltenVK Vulkan library"
+      - name: "[macOS] - MoltenVK Vulkan library, select XCode version"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.build.os == 'macos'
         # Pull in newer script as that has changed in branch: https://github.com/godotengine/godot/pull/97981
         run: |
+          # https://github.com/godotengine/godot/pull/108649 -- for all Godot versions.
+          sudo xcode-select -s /Applications/Xcode_16.2.app
+          # MoltenVK:
           git fetch origin master
           # git fetch origin ${{ matrix.godot.git-branch }}
           git restore --source FETCH_HEAD -- misc/scripts/install_vulkan_sdk_macos.sh

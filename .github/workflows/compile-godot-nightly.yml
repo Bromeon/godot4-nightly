@@ -236,9 +236,12 @@ jobs:
               libdbus-1-dev libudev-dev libxi-dev libxrandr-dev yasm xvfb wget unzip \
               llvm libspeechd-dev speech-dispatcher fontconfig libfontconfig-dev libwayland-bin
 
-      - name: "[macOS] - MoltenVK Vulkan library"
+      - name: "[macOS] - MoltenVK Vulkan library, select XCode version"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'macos'
         run: |
+          # https://github.com/godotengine/godot/pull/108649 -- for all Godot versions.
+          sudo xcode-select -s /Applications/Xcode_16.2.app
+          # MoltenVK:
           sh misc/scripts/install_vulkan_sdk_macos.sh
 
       - name: "[Linux|macOS] Compile Godot..."
