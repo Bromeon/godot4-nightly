@@ -79,6 +79,7 @@ jobs:
             scons-platform: windows
 
         godot:
+          # Interim, until Godot 4.5 support is merged. TODO remove.
           - artifact-name: '4.1'
             godot-version: '4.1.4'
             git-branch: '4.1'
@@ -95,6 +96,10 @@ jobs:
             godot-version: '4.4.1'
             git-branch: '4.4'
 
+          - artifact-name: '4.5'
+            godot-version: '4.5'
+            git-branch: '4.5'
+
         # Special case 4.0 for linux-memcheck
 #        include:
 #          - build:
@@ -108,7 +113,6 @@ jobs:
 #            godot:
 #              artifact-name: '4.0'
 #              godot-version: '4.0.4'
-
 
 
     steps:
