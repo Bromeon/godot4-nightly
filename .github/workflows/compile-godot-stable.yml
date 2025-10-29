@@ -79,11 +79,6 @@ jobs:
             scons-platform: windows
 
         godot:
-          # Interim, until Godot 4.5 support is merged. TODO remove.
-          - artifact-name: '4.1'
-            godot-version: '4.1.4'
-            git-branch: '4.1'
-
           - artifact-name: '4.2'
             godot-version: '4.2.2'
             git-branch: '4.2'
@@ -150,15 +145,15 @@ jobs:
       - name: "Apply no-dlclose patch for memcheck version"
         if: ${{ contains(matrix.build.id, 'memcheck') }}
         run: |
-          git apply --verbose repo/res/no-dlclose-4.0.patch
+          git apply --verbose repo/res/no-dlclose-4.2.patch
           echo "Difference:"
           git diff
           echo "Occurrence of close:"
           cat ./drivers/unix/os_unix.cpp | grep close_dynamic_library -B 3 -A 10
 
       # See https://github.com/godotengine/godot/pull/87305
-      - name: "Apply macOS Vulkan SDK patch for 4.1, 4.2, 4.5"
-        if: ${{ matrix.build.os == 'macos' && (matrix.godot.artifact-name == '4.1' || matrix.godot.artifact-name == '4.2' || matrix.godot.artifact-name == '4.5') }}
+      - name: "Apply macOS Vulkan SDK patch for 4.2, 4.5, 4.6"
+        if: ${{ matrix.build.os == 'macos' && (matrix.godot.artifact-name == '4.2' || matrix.godot.artifact-name == '4.5') }}
         run: |
           mv "repo/res/macos-${{ matrix.godot.artifact-name }}-detect.py" ./platform/macos/detect.py
 
