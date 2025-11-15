@@ -90,7 +90,9 @@ jobs:
             cmd:
               install-scons: pip install scons
               scons-platform: linuxbsd
-              scons-extra-args: target=template_release dev_build=no
+              # Note: target=... already specified; later options override earlier ones.
+              # disable_path_overrides: now necessary for security; see https://github.com/godotengine/godot/pull/111909.
+              scons-extra-args: target=template_release dev_build=no disable_path_overrides=no
               infix: template_release # template_release.dev (if dev_build=yes)
 
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_macos.html#doc-compiling-for-macos
