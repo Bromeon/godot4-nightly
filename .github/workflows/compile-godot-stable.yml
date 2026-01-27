@@ -92,8 +92,12 @@ jobs:
             git-branch: '4.4'
 
           - artifact-name: '4.5'
-            godot-version: '4.5'
+            godot-version: '4.5.1'
             git-branch: '4.5'
+
+          - artifact-name: '4.6'
+            godot-version: '4.6'
+            git-branch: '4.6'
 
         # Special case 4.0 for linux-memcheck
 #        include:
