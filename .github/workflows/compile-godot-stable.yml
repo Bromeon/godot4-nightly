@@ -156,10 +156,14 @@ jobs:
           cat ./drivers/unix/os_unix.cpp | grep close_dynamic_library -B 3 -A 10
 
       # See https://github.com/godotengine/godot/pull/87305
-      - name: "Apply macOS Vulkan SDK patch for 4.2, 4.5, 4.6"
-        if: ${{ matrix.build.os == 'macos' && (matrix.godot.artifact-name == '4.2' || matrix.godot.artifact-name == '4.5') }}
+      - name: "[macOS] Apply Vulkan SDK patch for 4.2, 4.5, 4.6"
+        if: ${{ matrix.build.os == 'macos' && (matrix.godot.artifact-name == '4.2' || matrix.godot.artifact-name == '4.5' || matrix.godot.artifact-name == '4.6' ) }}
         run: |
           mv "repo/res/macos-${{ matrix.godot.artifact-name }}-detect.py" ./platform/macos/detect.py
+
+      - name: "[Windows] Install Direct3D 12 SDK"
+        if: ${{ matrix.build.os == 'windows' && matrix.godot.artifact-name == '4.6' }}
+        run: python misc/scripts/install_d3d12_sdk_windows.py
 
       - name: "Install scons"
         if: steps.cache-godot.outputs.cache-hit != 'true'
