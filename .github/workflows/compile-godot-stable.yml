@@ -65,13 +65,6 @@ jobs:
             scons-platform: macos
             arch: arm64
 
-          - id: macos-x86
-            os: macos
-            runner: macos-latest
-            scons-install-cmd: brew install scons
-            scons-platform: macos
-            arch: x86_64
-
           - id: windows
             os: windows
             runner: windows-2022

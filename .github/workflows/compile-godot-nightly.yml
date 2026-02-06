@@ -118,24 +118,6 @@ jobs:
               infix: editor.dev.double
               arch: arm64
 
-          - id: macos-x86
-            os: macos
-            runner: macos-latest
-            cmd:
-              install-scons: brew install scons
-              scons-platform: macos
-              arch: x86_64
-
-          - id: macos-double-x86
-            os: macos
-            runner: macos-latest
-            cmd:
-              install-scons: brew install scons
-              scons-platform: macos
-              scons-extra-args: precision=double
-              infix: editor.dev.double
-              arch: x86_64
-
           # https://docs.godotengine.org/en/latest/development/compiling/compiling_for_windows.html#doc-compiling-for-windows
           # Note: we use scons v3 (not v4), which does not recognize Visual Studio 2022 (MSVC v19.32), so we need older runner
           - id: windows
