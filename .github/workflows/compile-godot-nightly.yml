@@ -229,7 +229,8 @@ jobs:
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'macos'
         run: |
           # https://github.com/godotengine/godot/pull/108649 -- for all Godot versions.
-          sudo xcode-select -s /Applications/Xcode_16.2.app
+          # Default runner version: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          sudo xcode-select -s /Applications/Xcode_26.0.1.app
           # MoltenVK:
           sh misc/scripts/install_vulkan_sdk_macos.sh
 
