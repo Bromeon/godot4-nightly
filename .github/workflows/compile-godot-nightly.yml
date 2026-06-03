@@ -249,7 +249,8 @@ jobs:
 
       - name: "[Windows] - MSVC developer console"
         if: steps.cache-godot.outputs.cache-hit != 'true' && matrix.os == 'windows'
-        uses: ilammy/msvc-dev-cmd@v1
+        shell: pwsh
+        run: repo/res/msvc-dev-cmd.ps1
 
       # /FS: platform\windows\crash_handler_windows.cpp: fatal error C1041: cannot open program database
       - name: "[Windows] Compile Godot..."
