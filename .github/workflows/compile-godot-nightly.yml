@@ -128,7 +128,7 @@ jobs:
               scons-platform: windows
               # Direct3D 12 is enabled by default from Godot 4.6+; currently disable for easier build.
               # See https://github.com/godotengine/godot/pull/113213.
-              scons-extra-args: d3d12=no
+              scons-extra-args: d3d12=no accesskit=no
 
           - id: windows-double
             os: windows
@@ -138,7 +138,7 @@ jobs:
               scons-platform: windows
               # Direct3D 12 is enabled by default from Godot 4.6+; currently disable for easier build.
               # See https://github.com/godotengine/godot/pull/113213.
-              scons-extra-args: precision=double d3d12=no
+              scons-extra-args: precision=double d3d12=no accesskit=no
               infix: editor.dev.double
 
         # install-scons: pip install scons

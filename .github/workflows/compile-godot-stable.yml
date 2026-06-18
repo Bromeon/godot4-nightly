@@ -70,6 +70,7 @@ jobs:
             runner: windows-2022
             scons-install-cmd: pip install scons
             scons-platform: windows
+            scons-extra-args: d3d12=no accesskit=no
 
         godot:
           - artifact-name: '4.2'
