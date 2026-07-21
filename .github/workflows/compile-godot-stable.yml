@@ -163,6 +163,15 @@ jobs:
             mv "repo/res/macos-${{ matrix.godot.artifact-name }}-detect.py" ./platform/macos/detect.py
           fi
 
+      # Godot 4.2 bundles embree 3.x, whose debug operator<< overloads print members that don't exist
+      # (QuadraticBezierCurve::u, PointMi::v0). Clang 17+ (Xcode 26) rejects them even though they are
+      # never instantiated; older Xcode versions accepted this, but none are left on the macOS runner image.
+      - name: "[macOS] Apply embree patch for 4.2"
+        if: matrix.build.os == 'macos' && matrix.godot.artifact-name == '4.2'
+        run: |
+          git apply --verbose repo/res/macos-embree-4.2.patch
+          git diff
+
       - name: "[Windows] Install Direct3D 12 SDK"
         if: ${{ matrix.build.os == 'windows' && matrix.godot.artifact-name == '4.6' }}
         run: python misc/scripts/install_d3d12_sdk_windows.py
@@ -188,12 +197,8 @@ jobs:
         # Pull in newer script as that has changed in branch: https://github.com/godotengine/godot/pull/97981
         run: |
           # https://github.com/godotengine/godot/pull/108649 -- for all Godot versions.
-          # Newer Xcode doesn't work for Godot 4.2, so use the older one for it.
-          if [[ "${{ matrix.godot.artifact-name }}" == "4.2" ]]; then
-            sudo xcode-select -s /Applications/Xcode_16.2.app
-          else
-            sudo xcode-select -s /Applications/Xcode_26.0.1.app
-          fi
+          # Default runner version: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          sudo xcode-select -s /Applications/Xcode_26.0.1.app
           # MoltenVK:
           git fetch origin master
           # git fetch origin ${{ matrix.godot.git-branch }}
